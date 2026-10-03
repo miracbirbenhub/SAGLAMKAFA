@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -100,6 +101,8 @@ public static class Metin2PyungmooFinalImporter
         GameObject mapRoot = GameObject.Find("Pyungmoo");
         if (mapRoot == null)
             throw new InvalidOperationException("Pyungmoo GameObject'i bulunamadı.");
+
+        ValidatePyungmooBuildSettings();
 
         string repoRoot = GetRepoRoot();
         string mapSource = FindDirectoryOrThrow(
@@ -211,6 +214,19 @@ public static class Metin2PyungmooFinalImporter
             buildingRefs.Add(new ResolvedBuilding(obj, property, model));
         }
 
+        if (unresolvedBuildingIds.Count > 0)
+        {
+            string ids = string.Join(
+                ", ",
+                unresolvedBuildingIds.Keys
+                    .Take(30)
+                    .Select(x => x.ToString(CultureInfo.InvariantCulture)));
+
+            throw new InvalidOperationException(
+                "Building Property kayıtları bulundu fakat ilgili FBX çözülemedi. " +
+                "Property ID'leri: " + ids);
+        }
+
         if (buildingRefs.Count == 0)
         {
             string ids = string.Join(
@@ -263,7 +279,8 @@ public static class Metin2PyungmooFinalImporter
             instance.transform.SetParent(buildingRoot, false);
             instance.transform.position = new Vector3(
                 resolved.AreaObject.Position.x * AreaCoordinateScale,
-                resolved.AreaObject.Position.z * AreaCoordinateScale,
+                (resolved.AreaObject.Position.z +
+                    resolved.AreaObject.HeightOffset) * AreaCoordinateScale,
                 -resolved.AreaObject.Position.y * AreaCoordinateScale);
             instance.transform.rotation =
                 ConvertRotation(resolved.AreaObject.Rotation);
@@ -575,6 +592,13 @@ public static class Metin2PyungmooFinalImporter
 
             if (renderer.sharedMaterials.Any(x => x == null))
                 return "Null material bulundu: " + renderer.name;
+
+            if (renderer.sharedMaterials.Any(
+                    x => x != null && x.shader == null))
+                return "Shader eksik: " + renderer.name;
+
+            if (renderer.bounds.size.sqrMagnitude <= 0.000001f)
+                return "Renderer bounds boş: " + renderer.name;
         }
 
         foreach (MeshFilter filter in
@@ -638,8 +662,7 @@ public static class Metin2PyungmooFinalImporter
 
             string canonicalModelKey = ResolveC1CanonicalKey(normalized);
 
-            if (string.IsNullOrEmpty(canonicalModelKey) ||
-                !buildingCanonical.ContainsKey(canonicalModelKey))
+            if (string.IsNullOrEmpty(canonicalModelKey))
                 continue;
 
             Match idMatch = Regex.Match(
@@ -1255,6 +1278,21 @@ public static class Metin2PyungmooFinalImporter
                     "/" +
                     renderer.name);
             }
+            else if (renderer.sharedMaterials.Any(x => x.shader == null))
+            {
+                errors.Add(
+                    "Renderer contains material with missing shader: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
+            }
+
+            if (renderer.bounds.size.sqrMagnitude <= 0.000001f)
+                errors.Add(
+                    "Renderer bounds empty: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
         }
 
         foreach (MeshFilter filter in
