@@ -12,9 +12,8 @@ public static class Metin2PyungmooNpcImporter
     private const string ScenePath = "Assets/Scenes/Pyungmoo.unity";
     private const string NpcRootName = "NPCs";
 
-    // C1 map NPC coordinates use map units where 100 units = 1 meter.
-    // Terrain/object data use the same world-unit basis.
-    private const float MapCoordinateScaleMeters = 1.0f;
+    // Keep the same coordinate scale as the verified terrain importer.
+    private const float MapCoordinateScaleMeters = 2.0f;
     private const float RayStartHeight = 5000.0f;
     private const float GroundOffset = 0.05f;
     private const string ImportedNpcFolder = "Assets/Metin2Imported/NPC";
