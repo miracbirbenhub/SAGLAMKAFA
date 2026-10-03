@@ -68,9 +68,10 @@ public static class Metin2PyungmooNpcImporter
         new(20349, "Seyis", "jinno_patrol_spear", 396, 735, 2)
     };
 
+    public static bool LastImportSucceeded { get; private set; }
+
     [MenuItem("Metin2/Pyungmoo/Import Village NPCs")]
     public static void ImportVillageNpcs()
-public static bool LastImportSucceeded { get; private set; }
     {
         LastImportSucceeded = false;
         try
