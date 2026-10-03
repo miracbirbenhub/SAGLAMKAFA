@@ -389,6 +389,19 @@ public static class Metin2PyungmooObjectImporter
 
             var propertyRoots = new List<string> { propertyRoot };
 
+            // Some legacy/embedded property definitions live beside the
+            // source objects under Metin2Client/Zone rather than only in
+            // Metin2Client/Property/property. AreaData references the YPRT ID,
+            // so all client-side property-definition files must participate
+            // in the same ID index.
+            string zonePropertyRoot = Path.Combine(
+                repoRoot,
+                "Metin2Client",
+                "Zone");
+
+            if (Directory.Exists(zonePropertyRoot))
+                propertyRoots.Add(zonePropertyRoot);
+
             string season3PropertyRoot = Path.Combine(
                 repoRoot,
                 "Metin2Client",
@@ -1554,6 +1567,12 @@ public static class Metin2PyungmooObjectImporter
 
         if (path.Contains("/property/b/"))
             score += 20;
+
+        // Zone-side .prb/.prt files are valid legacy property definitions.
+        // Prefer them over a generic duplicate when they carry an explicit
+        // geometry source path.
+        if (path.Contains("/zone/"))
+            score += 15;
 
         if (string.Equals(
                 entry.PropertyType,
