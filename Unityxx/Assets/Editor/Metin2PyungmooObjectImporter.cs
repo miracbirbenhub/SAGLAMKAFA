@@ -646,8 +646,11 @@ public static class Metin2PyungmooObjectImporter
 
             try
             {
+                // Metin2 GR2 -> FBX dönüşümünde eksen düzeltmesi zorunludur.
+                // Kullanıcının mevcut Noesis workflow'u ile aynı şekilde
+                // 90,0,0 derece rotasyon uygula.
                 string arguments =
-                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -notex";
+                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -notex -rotate 90 0 0";
 
                 using (var process = new Process())
                 {
