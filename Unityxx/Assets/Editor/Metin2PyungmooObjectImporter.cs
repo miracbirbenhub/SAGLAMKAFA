@@ -20,9 +20,10 @@ public static class Metin2PyungmooObjectImporter
     private const string AutoModelFolder = "Assets/Metin2Generated/Pyungmoo/AutoModels";
     private const string ReportPath = "Assets/Metin2Generated/Pyungmoo/PyungmooObjectImportReport.txt";
 
-    // Metin2 world units: 100 source units = 1 Unity metre.
+    // AreaData coordinates are in 100-unit map cells.
+    // The map terrain uses CellScale=200, so one AreaData unit is 0.02 Unity metres.
     // Source Y axis is inverted relative to Unity Z.
-    private const float CoordinateScale = 0.01f;
+    private const float CoordinateScale = 0.02f;
 
     private const int NoesisTimeoutMs = 120000;
 
@@ -292,7 +293,7 @@ public static class Metin2PyungmooObjectImporter
             report.AppendLine(
                 "Noesis dönüşümü: -rotate 90 0 0");
             report.AppendLine(
-                "Koordinat ölçeği: 100 Metin2 unit = 1 Unity metre");
+                "Koordinat ölçeği: 50 Metin2 unit = 1 Unity metre (0.02 m/unit)");
             report.AppendLine();
 
             if (missingModels.Count > 0)
