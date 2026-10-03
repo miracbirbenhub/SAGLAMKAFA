@@ -27,9 +27,10 @@ public static class Metin2PyungmooObjectImporter
 
     private const int NoesisTimeoutMs = 120000;
 
+    public static bool LastImportSucceeded { get; private set; }
+
     [MenuItem("Metin2/Pyungmoo/Import Map Objects")]
     public static void ImportMapObjects()
-public static bool LastImportSucceeded { get; private set; }
     {
         LastImportSucceeded = false;
         try
