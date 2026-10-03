@@ -61,7 +61,22 @@ public static class Metin2PyungmooObjectImporter
                 Path.Combine("Property", "property"),
                 Path.Combine("Property"));
 
-            Dictionary<uint, PropertyEntry> properties = LoadProperties(propertyRoot);
+            var propertyRoots = new List<string>
+            {
+                propertyRoot
+            };
+
+            string season3PropertyRoot = Path.Combine(
+                repoRoot,
+                "Metin2Client",
+                "season3_eu",
+                "property");
+
+            if (Directory.Exists(season3PropertyRoot))
+                propertyRoots.Add(season3PropertyRoot);
+
+            Dictionary<uint, PropertyEntry> properties =
+                LoadProperties(propertyRoots);
 
             var allObjects = new List<AreaObject>();
 
@@ -446,7 +461,7 @@ public static class Metin2PyungmooObjectImporter
     }
 
     private static Dictionary<uint, PropertyEntry>
-        LoadProperties(string propertyRoot)
+        LoadProperties(IEnumerable<string> propertyRoots)
     {
         var result =
             new Dictionary<uint, PropertyEntry>();
@@ -457,19 +472,21 @@ public static class Metin2PyungmooObjectImporter
             ".prb",
             ".prt",
             ".ptr",
-            ".prt",
             ".prd",
             ".pte",
             ".pre",
-            ".pra",
-            ".prt"
+            ".pra"
         };
 
         IEnumerable<string> files =
-            Directory.EnumerateFiles(
-                    propertyRoot,
-                    "*.*",
-                    SearchOption.AllDirectories)
+            propertyRoots
+                .Where(Directory.Exists)
+                .SelectMany(
+                    root =>
+                        Directory.EnumerateFiles(
+                            root,
+                            "*.*",
+                            SearchOption.AllDirectories))
                 .Where(
                     f =>
                     allowedExtensions.Contains(
@@ -563,7 +580,8 @@ public static class Metin2PyungmooObjectImporter
         }
 
         UnityEngine.Debug.Log(
-            $"Pyungmoo Property index: {result.Count} ID");
+            $"Pyungmoo Property index: {result.Count} ID " +
+            $"({propertyRoots.Count()} kök)");
 
         return result;
     }
