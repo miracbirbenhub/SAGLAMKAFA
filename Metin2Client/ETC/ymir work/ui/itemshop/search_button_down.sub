@@ -1,0 +1,7 @@
+title subImage
+version 2.0
+image "search_button.tga"
+left 1
+top 55
+right 41
+bottom 81

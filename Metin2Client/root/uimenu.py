@@ -1,0 +1,173 @@
+import ui
+import net
+import app
+import constInfo
+import localeInfo
+import uiCommon
+import chrmgr
+import uiToolTip
+from uiToolTip import ItemToolTip
+import wndMgr
+import chat
+import ui_offline as ui2
+
+class MenuWindow(ui.ScriptWindow):
+
+	SOL_MENU = {
+		0 : ["Biyolog","icon/item/30006.tga"],
+		1 : ["Oto Baðýrma","icon/item/70028.tga"],
+		2 : ["Offline Shop","icon/item/50200.tga"],
+		3 : ["Battle Pass","icon/item/70032.tga"],
+		4 : ["Toplu Ýþlemler","icon/item/25000.tga"],
+		}
+		
+	SAG_MENU = {
+		}
+
+	def __init__(self):
+		ui.ScriptWindow.__init__(self)
+		self.__Initialize()
+		self.__Load()
+
+	def __del__(self):
+		ui.ScriptWindow.__del__(self)
+		print " -------------------------------------- DELETE GAME OPTION DIALOG"
+
+	def __Initialize(self):
+		self.titleBar = 0
+		self.tab = {}
+		self.text = {}
+		self.slot = {}
+		self.image = {}
+		
+		self.tab2 = {}
+		self.text2 = {}
+		self.slot2 = {}
+		self.image2 = {}
+
+	def Destroy(self):
+		self.ClearDictionary()
+
+		self.__Initialize()
+		print " -------------------------------------- DESTROY GAME OPTION DIALOG"
+	
+	def __Load_LoadScript(self, fileName):
+		try:
+			pyScriptLoader = ui.PythonScriptLoader()
+			pyScriptLoader.LoadScriptFile(self, fileName)
+		except:
+			import exception
+			exception.Abort("MenuDialog.__Load_LoadScript")
+
+	def __Load_BindObject(self):
+		try:
+			GetObject = self.GetChild
+			self.titleBar = GetObject("titlebar")
+			self.board = self.GetChild("board")
+
+		except:
+			import exception
+			exception.Abort("MenuDialog.__Load_BindObject")
+			
+	def CreateButton(self):
+		for i in range(len(self.SOL_MENU)):
+			self.MakeButton(
+				i,\
+				self.board,\
+				13, 33 + (45 * i)
+			)
+			
+	def CreateButton2(self):
+		for i in range(len(self.SAG_MENU)):
+			self.MakeButton2(
+				i,\
+				self.board,\
+				13+175, 33 + (45 * i)
+			)
+			
+	def MakeButton(self, index, parent, x, y):
+		self.tab[index] = ui.MakeButton(parent, x, y, False, "menu/", "1.tga", "2.tga", "3.tga")
+		
+		self.tab[index].SetEvent(ui.__mem_func__(self.OpenGui), index)
+
+		self.text[index] = ui.TextLine()
+		self.text[index].SetParent(self.tab[index])
+		self.text[index].SetPosition(75, 10)
+		self.text[index].SetFontName("Tahoma:14")
+		self.text[index].SetText(self.SOL_MENU[index][0])
+		self.text[index].Show()
+		
+		self.slot[index] = ui2.MakeImageBoxNoImg(self.tab[index], 7, 2)
+		self.slot[index].LoadImage("biyolog/biyoslot.tga")
+		
+		self.image[index] = ui2.MakeImageBoxNoImg(self.tab[index], 10, 5)
+		self.image[index].LoadImage(self.SOL_MENU[index][1])
+		
+	def MakeButton2(self, index, parent, x, y):
+		self.tab2[index] = ui.MakeButton(parent, x, y, False, "menu/", "1.tga", "2.tga", "3.tga")
+		
+		self.tab2[index].SetEvent(ui.__mem_func__(self.OpenGui2), index)
+
+		self.text2[index] = ui.TextLine()
+		self.text2[index].SetParent(self.tab2[index])
+		self.text2[index].SetPosition(75, 10)
+		self.text2[index].SetFontName("Tahoma:14")
+		self.text2[index].SetText(self.SAG_MENU[index][0])
+		self.text2[index].Show()
+		
+		self.slot2[index] = ui2.MakeImageBoxNoImg(self.tab2[index], 7, 2)
+		self.slot2[index].LoadImage("biyolog/biyoslot.tga")
+		
+		self.image2[index] = ui2.MakeImageBoxNoImg(self.tab2[index], 10, 5)
+		self.image2[index].LoadImage(self.SAG_MENU[index][1])
+
+	def __Load(self):
+		self.__Load_LoadScript("uiscript/menuwindow.py")
+
+		self.__Load_BindObject()
+
+		self.SetCenterPosition()
+
+		self.titleBar.SetCloseEvent(ui.__mem_func__(self.Close))
+		
+		self.CreateButton()
+		self.CreateButton2()
+		
+	def BindInterface(self, interface):
+		self.interface = interface
+		
+	def __ClickButton(self, arg):
+		self.SOL_MENU[arg][2]
+		
+	def OpenGui(self, arg):
+		if int(arg) == 0:
+			self.interface.OpenBiyologTable()
+		elif int(arg) == 1:
+			self.interface.OpenShoutWindow()
+		if int(arg) == 2:
+			self.interface.OpenOfflineShop()
+		elif int(arg) == 3:
+			net.SendChatPacket("/open_battlepass")
+		if int(arg) == 4:
+			self.interface.OpenDeleteItem()
+		self.Close()
+		return True
+	
+	def OpenGui2(self, arg):
+
+
+		self.Close()
+		return True
+	
+	def Destroy(self):
+		self.ClearDictionary()
+		self.tooltipItem = None
+		self.board = None
+		self.interface = None
+
+	def OnPressEscapeKey(self):
+		self.Close()
+		return True
+
+	def Close(self):
+		self.Hide()

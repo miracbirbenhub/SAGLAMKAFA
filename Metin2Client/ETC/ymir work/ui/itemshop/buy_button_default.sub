@@ -1,0 +1,7 @@
+title subImage
+version 2.0
+image "buy_button.tga"
+left 1
+top 1
+right 95
+bottom 26
