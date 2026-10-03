@@ -11,16 +11,24 @@ using UnityEngine.SceneManagement;
 public static class Metin2PyungmooBuildingPreview
 {
     private const string ScenePath = "Assets/Scenes/Pyungmoo.unity";
-    private const string Folder = "Assets/Metin2Imported/Building";
     private const string RootName = "BuildingFBXPreview";
 
     [MenuItem("Metin2/Pyungmoo/Preview All Building FBX On Map")]
     public static void Preview()
     {
+        PreviewAll(true);
+    }
+
+    public static int PreviewAll(bool showDialog)
+    {
         Scene scene = SceneManager.GetActiveScene();
 
         if (!string.Equals(scene.path, ScenePath, StringComparison.OrdinalIgnoreCase))
-            scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+        {
+            scene = EditorSceneManager.OpenScene(
+                ScenePath,
+                OpenSceneMode.Single);
+        }
 
         GameObject mapRoot = GameObject.Find("Pyungmoo");
         if (mapRoot == null)
@@ -30,33 +38,66 @@ public static class Metin2PyungmooBuildingPreview
         if (oldRoot != null)
             UnityEngine.Object.DestroyImmediate(oldRoot.gameObject);
 
-        Transform root = new GameObject(RootName).transform;
-        root.SetParent(mapRoot.transform, false);
-
         AssetDatabase.Refresh();
 
-        string[] guids = AssetDatabase.FindAssets("t:Model", new[] { Folder });
-        var models = new List<GameObject>();
+        string absoluteFolder = Path.Combine(
+            Application.dataPath,
+            "Metin2Imported",
+            "Building");
 
-        foreach (string guid in guids)
+        if (!Directory.Exists(absoluteFolder))
+            throw new DirectoryNotFoundException(
+                "Building FBX klasörü bulunamadı: " + absoluteFolder);
+
+        string[] physicalFiles = Directory.GetFiles(
+                absoluteFolder,
+                "*.fbx",
+                SearchOption.AllDirectories)
+            .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (physicalFiles.Length == 0)
+            throw new InvalidOperationException(
+                "Building klasöründe hiç FBX bulunamadı.");
+
+        var models = new List<(string AssetPath, GameObject Model)>();
+
+        foreach (string physicalPath in physicalFiles)
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (!path.EndsWith(".fbx", StringComparison.OrdinalIgnoreCase))
-                continue;
+            string assetPath = ToAssetPath(physicalPath);
 
-            GameObject model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (model != null)
-                models.Add(model);
+            GameObject model =
+                AssetDatabase.LoadAssetAtPath<GameObject>(assetPath);
+
+            if (model == null)
+            {
+                throw new InvalidOperationException(
+                    "Unity Building FBX'i import edemedi: " +
+                    assetPath);
+            }
+
+            if (model.GetComponentsInChildren<Renderer>(true).Length == 0)
+            {
+                throw new InvalidOperationException(
+                    "Building FBX içinde Renderer bulunamadı: " +
+                    assetPath);
+            }
+
+            models.Add((assetPath, model));
         }
 
-        models = models
-            .GroupBy(m => Path.GetFileNameWithoutExtension(m.name), StringComparer.OrdinalIgnoreCase)
-            .Select(g => g.First())
-            .OrderBy(m => m.name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        if (models.Count != physicalFiles.Length)
+        {
+            throw new InvalidOperationException(
+                $"Building FBX sayısı uyuşmuyor. Disk={physicalFiles.Length}, Unity={models.Count}");
+        }
 
-        const int columns = 8;
-        const float spacing = 45f;
+        Transform root = new GameObject(RootName).transform;
+        root.SetParent(mapRoot.transform, true);
+        root.position = CalculateGalleryOrigin(mapRoot.transform);
+
+        const int columns = 6;
+        const float spacing = 90.0f;
 
         for (int i = 0; i < models.Count; i++)
         {
@@ -64,19 +105,36 @@ public static class Metin2PyungmooBuildingPreview
             int row = i / columns;
 
             GameObject instance =
-                PrefabUtility.InstantiatePrefab(models[i]) as GameObject;
+                PrefabUtility.InstantiatePrefab(models[i].Model) as GameObject;
 
             if (instance == null)
-                continue;
+            {
+                throw new InvalidOperationException(
+                    "Building FBX prefab instance oluşturulamadı: " +
+                    models[i].AssetPath);
+            }
 
             instance.name =
-                "PREVIEW_" +
-                Regex.Replace(models[i].name, @"[^A-Za-z0-9_-]", "_");
+                "FBX_" +
+                i.ToString("D2") +
+                "_" +
+                Regex.Replace(
+                    models[i].Model.name,
+                    @"[^A-Za-z0-9_-]",
+                    "_");
 
             instance.transform.SetParent(root, false);
             instance.transform.localPosition =
-                new Vector3(col * spacing, 5f, row * spacing);
+                new Vector3(col * spacing, 0.0f, row * spacing);
             instance.transform.localRotation = Quaternion.identity;
+            instance.transform.localScale = Vector3.one;
+            instance.isStatic = true;
+        }
+
+        if (root.childCount != models.Count)
+        {
+            throw new InvalidOperationException(
+                $"Building gallery child sayısı uyuşmuyor. Scene={root.childCount}, expected={models.Count}");
         }
 
         Selection.activeGameObject = root.gameObject;
@@ -84,10 +142,76 @@ public static class Metin2PyungmooBuildingPreview
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene, ScenePath);
 
-        EditorUtility.DisplayDialog(
-            "Building Preview",
-            "Preview olarak sahneye yerleştirilen FBX: " + models.Count +
-            "\n\nHierarchy: Pyungmoo/BuildingFBXPreview",
-            "Tamam");
+        AssetDatabase.SaveAssets();
+        AssetDatabase.Refresh();
+
+        if (showDialog)
+        {
+            EditorUtility.DisplayDialog(
+                "Building FBX Preview",
+                $"Sahneye {models.Count} adet Building FBX eklendi.\n\nHierarchy: Pyungmoo/{RootName}",
+                "Tamam");
+        }
+
+        return models.Count;
+    }
+
+    private static Vector3 CalculateGalleryOrigin(Transform mapRoot)
+    {
+        var renderers = mapRoot
+            .GetComponentsInChildren<Renderer>(true)
+            .Where(r => !IsInsideNamedRoot(r.transform, RootName))
+            .ToArray();
+
+        if (renderers.Length == 0)
+            return new Vector3(5000.0f, 0.0f, 5000.0f);
+
+        Bounds bounds = renderers[0].bounds;
+
+        for (int i = 1; i < renderers.Length; i++)
+            bounds.Encapsulate(renderers[i].bounds);
+
+        return new Vector3(
+            bounds.max.x + 1000.0f,
+            bounds.min.y,
+            bounds.max.z + 1000.0f);
+    }
+
+    private static bool IsInsideNamedRoot(Transform transform, string rootName)
+    {
+        Transform current = transform;
+
+        while (current != null)
+        {
+            if (string.Equals(
+                    current.name,
+                    rootName,
+                    StringComparison.Ordinal))
+                return true;
+
+            current = current.parent;
+        }
+
+        return false;
+    }
+
+    private static string ToAssetPath(string absolutePath)
+    {
+        string assetsRoot = Application.dataPath
+            .Replace('\\', '/')
+            .TrimEnd('/');
+
+        string normalized = absolutePath.Replace('\\', '/');
+
+        if (!normalized.StartsWith(
+                assetsRoot + "/",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Assets dışı Building FBX yolu: " + absolutePath);
+        }
+
+        return "Assets/" +
+            normalized.Substring(assetsRoot.Length + 1);
     }
 }
