@@ -423,37 +423,27 @@ public static class Metin2PyungmooDirectBuildingImporter
             new Dictionary<string, GameObject>(
                 StringComparer.OrdinalIgnoreCase);
 
-        string projectRoot =
-            Directory.GetParent(Application.dataPath).FullName;
+        // Do not derive the Unity project path from the repository location.
+        // AssetDatabase is the authoritative source for what is actually inside
+        // this Unity project's Assets folder.
+        AssetDatabase.Refresh();
 
-        string absoluteFolder =
-            Path.Combine(
-                projectRoot,
-                BuildingFolder.Substring("Assets/".Length)
-                    .Replace('/', Path.DirectorySeparatorChar));
+        string[] guids =
+            AssetDatabase.FindAssets(
+                "t:Model",
+                new[] { BuildingFolder });
 
-        if (!Directory.Exists(absoluteFolder))
-        {
-            UnityEngine.Debug.LogWarning(
-                $"Building klasörü bulunamadı: {absoluteFolder}");
-            return result;
-        }
+        int foundAssets = guids.Length;
 
-        string[] files = Directory.GetFiles(
-            absoluteFolder,
-            "*.fbx",
-            SearchOption.AllDirectories);
-
-        foreach (string file in files.OrderBy(
-                     p => p,
-                     StringComparer.OrdinalIgnoreCase))
+        foreach (string guid in guids)
         {
             string assetPath =
-                "Assets/" +
-                Path.GetRelativePath(
-                    Path.Combine(projectRoot, "Assets"),
-                    file)
-                .Replace('\\', '/');
+                AssetDatabase.GUIDToAssetPath(guid);
+
+            if (!assetPath.EndsWith(
+                    ".fbx",
+                    StringComparison.OrdinalIgnoreCase))
+                continue;
 
             GameObject prefab = null;
 
@@ -482,10 +472,14 @@ public static class Metin2PyungmooDirectBuildingImporter
             }
 
             if (prefab == null)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"FBX AssetDatabase'de var ama GameObject olarak yüklenemedi: {assetPath}");
                 continue;
+            }
 
             string fileName =
-                Path.GetFileNameWithoutExtension(file);
+                Path.GetFileNameWithoutExtension(assetPath);
 
             AddModelAlias(result, fileName, prefab, false);
             AddModelAlias(
@@ -498,11 +492,12 @@ public static class Metin2PyungmooDirectBuildingImporter
         }
 
         UnityEngine.Debug.Log(
-            $"Direct Building FBX index: {result.Count} alias");
+            $"Direct Building FBX AssetDatabase discovery: " +
+            $"foundAssets={foundAssets}, usableFBX={result.Count}, " +
+            $"folder={BuildingFolder}");
 
         return result;
     }
-
     private static void AddModelAlias(
         Dictionary<string, GameObject> result,
         string key,
