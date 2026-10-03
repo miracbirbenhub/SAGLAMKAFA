@@ -1,0 +1,41 @@
+Pyungmoo Static Coverage Report
+Generated from repository state:
+  branch: fix/pyungmoo-complete-npc-building-integration
+
+Repository inventory
+--------------------
+Building FBX files: 47
+Building FBX .meta files: 47
+NPC FBX files: 22
+NPC FBX .meta files: 22
+
+C1 Building source coverage
+---------------------------
+C1 Building Property source model names: 36 unique
+C1 Building GR2 source files missing: 0
+C1 Building normalized FBX base models missing: 0
+
+NPC scene/import coverage
+-------------------------
+NPC placement entries in importer: 31
+Unique NPC model keys in placements: 22
+NPC FBX model keys missing from placement list: 0
+NPC FBX files unused by placement list: 0
+
+Changes in this branch
+----------------------
+- Building FBX preview now enumerates every physical FBX instead of deduplicating by filename.
+- Missing/unloadable Building FBX files cause a hard failure.
+- NPC import no longer creates placeholder objects for missing models.
+- Duplicate Building preview generation was removed from the direct AreaData importer.
+- A strict Pyungmoo integration validator was added.
+- A one-click FINALIZE pipeline was added.
+- Validator can perform a StrictMode StandaloneWindows64 BuildPlayer test when run inside Unity.
+
+Important verification limit
+-----------------------------
+The repository-side inventory and mapping checks are complete.
+A real Unity Editor import, scene serialization pass, and StandaloneWindows64 build have NOT been executed in this environment because a Unity Editor/runtime is not available here.
+
+Therefore this report does not claim a 100% runtime guarantee.
+The FINALIZE tool is intentionally designed to fail rather than silently succeed when Unity-side checks fail.
