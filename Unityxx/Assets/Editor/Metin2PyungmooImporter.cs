@@ -248,16 +248,17 @@ public static class Metin2PyungmooImporter
         string sourceRoot,
         Dictionary<int, TextureEntry> textureSet)
     {
-        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-        string repoRoot = Directory.GetParent(projectRoot).FullName;
+        string assetsRoot = Application.dataPath;
+        string projectRoot = Directory.GetParent(assetsRoot).FullName;
+        string repoRoot = projectRoot;
 
         string textureOutput = Path.Combine(
-            projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Textures");
+            assetsRoot, "Metin2Generated", "Pyungmoo", "Textures");
         string materialOutput = "Assets/Metin2Generated/Pyungmoo/Materials";
 
         Directory.CreateDirectory(textureOutput);
-        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Meshes"));
-        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Materials"));
+        Directory.CreateDirectory(Path.Combine(assetsRoot, "Metin2Generated", "Pyungmoo", "Meshes"));
+        Directory.CreateDirectory(Path.Combine(assetsRoot, "Metin2Generated", "Pyungmoo", "Materials"));
 
         var materials = new Dictionary<int, Material>();
 
@@ -275,8 +276,8 @@ public static class Metin2PyungmooImporter
             string safeName = $"Tex_{entry.Id:00}_{Sanitize(Path.GetFileNameWithoutExtension(sourceFile))}";
             string destinationAsset = $"Assets/Metin2Generated/Pyungmoo/Textures/{safeName}.dds";
             string destinationAbsolute = Path.Combine(
-                projectRoot,
-                destinationAsset.Substring("Assets/".Length).Replace('/', Path.DirectorySeparatorChar));
+                assetsRoot,
+                destinationAsset.Substring("Assets/".Length).TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
             if (!File.Exists(destinationAbsolute))
                 File.Copy(sourceFile, destinationAbsolute);
@@ -543,10 +544,10 @@ public static class Metin2PyungmooImporter
         if (AssetDatabase.IsValidFolder(GeneratedRoot))
             AssetDatabase.DeleteAsset(GeneratedRoot);
 
-        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Meshes"));
-        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Materials"));
-        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Textures"));
+        string assetsRoot = Application.dataPath;
+        Directory.CreateDirectory(Path.Combine(assetsRoot, "Metin2Generated", "Pyungmoo", "Meshes"));
+        Directory.CreateDirectory(Path.Combine(assetsRoot, "Metin2Generated", "Pyungmoo", "Materials"));
+        Directory.CreateDirectory(Path.Combine(assetsRoot, "Metin2Generated", "Pyungmoo", "Textures"));
     }
 
     private static void DeleteAssetIfExists(string assetPath)
