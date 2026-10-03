@@ -485,7 +485,7 @@ public static class Metin2PyungmooIntegrationValidator
         return normalized;
     }
 
-    private static void WriteReport(ValidationResult result)
+    public static void WriteReport(ValidationResult result)
     {
         string absoluteReport = Path.Combine(
             Application.dataPath,
