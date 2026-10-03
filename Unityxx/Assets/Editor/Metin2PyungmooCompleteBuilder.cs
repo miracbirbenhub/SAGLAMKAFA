@@ -40,21 +40,8 @@ public static class Metin2PyungmooCompleteBuilder
 
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
-                "AreaData / MapObjects yeniden oluşturuluyor...",
-                0.30f);
-
-            Metin2PyungmooObjectImporter.ImportMapObjects();
-
-            if (!Metin2PyungmooObjectImporter.LastImportSucceeded)
-            {
-                throw new InvalidOperationException(
-                    "MapObjects importer başarısız oldu.");
-            }
-
-            EditorUtility.DisplayProgressBar(
-                "Pyungmoo Finalize",
                 "Gerçek Building FBX AreaData instance'ları oluşturuluyor...",
-                0.50f);
+                0.30f);
 
             Metin2PyungmooDirectBuildingImporter.ImportExistingBuildingFbxDirect();
 
@@ -67,7 +54,7 @@ public static class Metin2PyungmooCompleteBuilder
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
                 "47/47 Building FBX sahne galerisine bağlanıyor...",
-                0.70f);
+                0.60f);
 
             int buildingCount =
                 Metin2PyungmooBuildingPreview.PreviewAll(false);
@@ -81,7 +68,7 @@ public static class Metin2PyungmooCompleteBuilder
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
                 "Scene validation yapılıyor...",
-                0.82f);
+                0.72f);
 
             Metin2PyungmooIntegrationValidator.ValidationResult validation =
                 Metin2PyungmooIntegrationValidator.ValidateCurrentScene();
@@ -97,7 +84,7 @@ public static class Metin2PyungmooCompleteBuilder
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
                 "Temiz Standalone Windows build testi çalıştırılıyor...",
-                0.90f);
+                0.82f);
 
             Metin2PyungmooIntegrationValidator.ValidationResult buildValidation =
                 Metin2PyungmooIntegrationValidator.ValidateAndBuildPlayer();
