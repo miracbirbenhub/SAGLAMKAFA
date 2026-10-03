@@ -89,10 +89,16 @@ public static class Metin2PyungmooDirectBuildingImporter
             int matchedProperty = 0;
             int missingProperty = 0;
             int missingModel = 0;
+            int previewPlaced = 0;
 
             var missingIds = new Dictionary<uint, int>();
             var missingModelNames =
                 new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            // The current C1 AreaData in this repository does not reference most
+            // of the C1 Building Property IDs. Do not invent map coordinates for
+            // those objects. Instead, create a visible library preview so the
+            // imported FBX assets can be verified directly inside the scene.
 
             string currentChunk = null;
             Transform currentChunkRoot = null;
@@ -175,6 +181,14 @@ public static class Metin2PyungmooDirectBuildingImporter
                 }
             }
 
+            if (matchedProperty < 3 && models.Count > 0)
+            {
+                previewPlaced = CreateBuildingLibraryPreview(
+                    mapRoot,
+                    models,
+                    placed);
+            }
+
             var report = new StringBuilder();
             report.AppendLine("Pyungmoo Direct Building Import Report");
             report.AppendLine(
@@ -192,6 +206,7 @@ public static class Metin2PyungmooDirectBuildingImporter
                 $"Building Property IDs indexed: {buildingProperties.Count}");
             report.AppendLine($"Property -> Building matches: {matchedProperty}");
             report.AppendLine($"Placed Building FBX: {placed}");
+            report.AppendLine($"Building library preview FBX: {previewPlaced}");
             report.AppendLine($"Missing Property ID: {missingProperty}");
             report.AppendLine($"Missing existing Building FBX: {missingModel}");
             report.AppendLine($"Existing Building FBX indexed: {models.Count}");
@@ -246,6 +261,7 @@ public static class Metin2PyungmooDirectBuildingImporter
                 $"Building Property IDs: {buildingProperties.Count}\n" +
                 $"Eşleşen bina instance: {matchedProperty}\n" +
                 $"Haritaya yerleştirilen FBX: {placed}\n" +
+                $"Preview olarak yerleştirilen FBX: {previewPlaced}\n" +
                 $"Eksik Property: {missingProperty}\n" +
                 $"Eksik Building FBX: {missingModel}\n\n" +
                 "Noesis kullanılmadı.\n" +
@@ -262,6 +278,87 @@ public static class Metin2PyungmooDirectBuildingImporter
                 ex.Message,
                 "Tamam");
         }
+    }
+
+    private static int CreateBuildingLibraryPreview(
+        GameObject mapRoot,
+        Dictionary<string, GameObject> models,
+        int alreadyPlaced)
+    {
+        const string previewRootName = "BuildingLibraryPreview";
+        Transform old = mapRoot.transform.Find(previewRootName);
+        if (old != null)
+            UnityEngine.Object.DestroyImmediate(old.gameObject);
+
+        Transform root = new GameObject(previewRootName).transform;
+        root.SetParent(mapRoot.transform, false);
+
+        Bounds bounds = new Bounds(Vector3.zero, new Vector3(200f, 20f, 200f));
+        bool haveBounds = false;
+
+        foreach (Renderer renderer in
+                 mapRoot.GetComponentsInChildren<Renderer>(true))
+        {
+            if (renderer == null ||
+                renderer.transform.IsChildOf(root))
+                continue;
+
+            if (!haveBounds)
+            {
+                bounds = renderer.bounds;
+                haveBounds = true;
+            }
+            else
+            {
+                bounds.Encapsulate(renderer.bounds);
+            }
+        }
+
+        Vector3 center = haveBounds ? bounds.center : Vector3.zero;
+        float topY = haveBounds ? bounds.max.y : 0f;
+
+        // Keep the preview close to the map center but leave a visible gap
+        // between large buildings. This is explicitly a visual asset check,
+        // not a replacement for AreaData coordinates.
+        const int columns = 7;
+        const float spacing = 45f;
+        int index = 0;
+
+        foreach (GameObject model in
+                 models.Values.Distinct())
+        {
+            if (model == null)
+                continue;
+
+            GameObject instance =
+                PrefabUtility.InstantiatePrefab(model) as GameObject;
+
+            if (instance == null)
+                continue;
+
+            int row = index / columns;
+            int column = index % columns;
+
+            instance.name =
+                $"PREVIEW_{index:000}_{Sanitize(model.name)}";
+
+            instance.transform.SetParent(root, false);
+            instance.transform.position =
+                new Vector3(
+                    center.x + (column - (columns - 1) * 0.5f) * spacing,
+                    topY + 2f,
+                    center.z + row * spacing);
+            instance.transform.rotation = Quaternion.identity;
+            instance.isStatic = true;
+
+            index++;
+        }
+
+        UnityEngine.Debug.Log(
+            $"Building library preview: {index} FBX placed under {previewRootName}. " +
+            $"Actual AreaData placements: {alreadyPlaced}");
+
+        return index;
     }
 
     private static Dictionary<uint, BuildingProperty>
