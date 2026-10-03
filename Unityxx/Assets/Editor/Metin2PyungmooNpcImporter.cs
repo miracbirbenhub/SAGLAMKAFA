@@ -24,7 +24,7 @@ public static class Metin2PyungmooNpcImporter
     {
         // Skill teachers: placement is verified from the C1 npc.txt source.
         // Their visual model is intentionally left unresolved for now because
-        // this repository's npclist maps all 20340-20345 entries to one generic
+        // this repository's npclist maps all 20340-20347 entries to one generic
         // jinno_patrol_spear resource. We will verify the trainer visuals before
         // asking for GR2 conversion.
         new(20340, "Bedensel Savaş Öğretmeni", "UNVERIFIED", 444, 623, 7),
@@ -47,13 +47,13 @@ public static class Metin2PyungmooNpcImporter
         // Other fixed village NPCs from the same C1 npc.txt.
         new(20008, "Octavio", "mr_restaurant", 340, 747, 7),
         new(20023, "Soon", "bookworm", 454, 530, 0),
-        new(20002, "Ah-Yu", "auntie", 343, 560, 0),
-        new(20003, "Bebek ve Anne", "baby_and_mom", 378, 577, 0),
-        new(20005, "Seramikçi", "ceramist", 292, 718, 0),
+        new(20002, "Aranyo", "auntie", 343, 560, 0),
+        new(20003, "Ah-Yu", "baby_and_mom", 378, 577, 0),
+        new(20005, "Yonah", "ceramist", 292, 718, 0),
         new(20006, "Mirine", "girl_lost_elder_brother", 336, 770, 0),
-        new(20011, "Bitkici Araştırmacı", "plant_researcher", 425, 716, 0),
+        new(20011, "Uriel", "plant_researcher", 425, 716, 0),
         new(20018, "Baek-Go", "doctor", 465, 612, 0),
-        new(20041, "Dilenci", "beggar", 323, 617, 0),
+        new(20041, "Sarhoş", "beggar", 323, 617, 0),
 
         // Quest / map service NPCs.
         new(20355, "Köy Meydanı Gardiyanı", "guard_leader", 286, 639, 0),
