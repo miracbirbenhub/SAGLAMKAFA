@@ -11,11 +11,12 @@ using UnityEngine.SceneManagement;
 public static class Metin2PyungmooImporter
 {
     private const int HeightSamples = 131;
-    private const int TerrainSamples = 129; // 128 cells + 1 seam vertex; final 2 source samples are padding.
-    private const int CellsPerChunk = 256;
+    private const int TerrainVertices = 257;
+    private const int TerrainCells = 256;
+    private const int TileRawSize = 258;
 
-    // Metin2 MapSetting commonly uses CellScale=200 and HeightScale=0.5.
-    // We treat Metin2 positions as centimeters: 200 -> 2 meters/cell and 0.5 -> 0.005 meters/raw height unit.
+    // One Metin2 terrain chunk is 256 x 256 cells.
+    // The height map has 131 samples because one height sample covers a 2 x 2 cell area.
     private const float CellScaleMeters = 2.0f;
     private const float HeightScaleMetersPerRawUnit = 0.005f;
     private const float HeightSampleSpacingMeters = CellScaleMeters * 2.0f;
@@ -29,12 +30,14 @@ public static class Metin2PyungmooImporter
         try
         {
             string sourceRoot = FindSourceRoot();
+            string textureSetPath = FindTextureSet(sourceRoot);
+            var textureSet = ParseTextureSet(textureSetPath);
             var chunks = DiscoverChunks(sourceRoot);
 
             if (chunks.Count == 0)
-                throw new InvalidOperationException("metin2_map_c1 içinde 000000 gibi terrain chunk klasörleri bulunamadı.");
+                throw new InvalidOperationException("metin2_map_c1 içinde terrain chunk klasörleri bulunamadı.");
 
-            PrepareGeneratedFolders();
+            PrepareGeneratedRoot();
             AssetDatabase.Refresh();
 
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
@@ -42,46 +45,48 @@ public static class Metin2PyungmooImporter
             var terrainRoot = new GameObject("Terrain");
             terrainRoot.transform.SetParent(mapRoot.transform, false);
 
-            var chunkBounds = new Bounds();
+            var allMaterials = BuildTextureMaterials(sourceRoot, textureSet);
+
+            Bounds mapBounds = default;
             bool hasBounds = false;
 
             foreach (var chunk in chunks)
             {
-                var go = BuildChunk(sourceRoot, chunk, terrainRoot.transform);
+                var go = BuildChunk(chunk, terrainRoot.transform, allMaterials);
 
-                var renderer = go.GetComponent<MeshRenderer>();
+                MeshRenderer renderer = go.GetComponent<MeshRenderer>();
                 if (renderer != null)
                 {
-                    var b = renderer.bounds;
                     if (!hasBounds)
                     {
-                        chunkBounds = b;
+                        mapBounds = renderer.bounds;
                         hasBounds = true;
                     }
                     else
                     {
-                        chunkBounds.Encapsulate(b);
+                        mapBounds.Encapsulate(renderer.bounds);
                     }
                 }
             }
 
             CreateLighting(mapRoot.transform);
-            CreateTemporaryPlayer(mapRoot.transform, chunkBounds);
+            CreateTemporaryPlayer(mapRoot.transform, mapBounds);
 
             EditorSceneManager.SaveScene(scene, ScenePath);
-            EditorBuildSettings.scenes = AddSceneToBuildSettings(ScenePath);
-
-            Selection.activeGameObject = mapRoot;
-            SceneView.lastActiveSceneView?.FrameSelected();
+            AddSceneToBuildSettings(ScenePath);
 
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
+            Selection.activeGameObject = mapRoot;
+            SceneView.lastActiveSceneView?.FrameSelected();
+
             EditorUtility.DisplayDialog(
                 "Pyungmoo hazır",
-                $"Pyungmoo terrain oluşturuldu. Chunk: {chunks.Count}\n" +
-                $"Harita boyutu yaklaşık: {GetMapWidth(chunks):0} m × {GetMapDepth(chunks):0} m\n\n" +
-                "Assets/Scenes/Pyungmoo.unity açıldı. Play ile geçici karakterle gezebilirsin.",
+                $"Gerçek terrain + tile.raw texture dağılımı oluşturuldu.\n" +
+                $"Chunk: {chunks.Count}\n" +
+                $"TextureSet: metin2_c1.txt\n\n" +
+                "Assets/Scenes/Pyungmoo.unity açıldı. Play ile gezebilirsin.",
                 "Tamam");
         }
         catch (Exception ex)
@@ -91,24 +96,31 @@ public static class Metin2PyungmooImporter
         }
     }
 
-    [MenuItem("Metin2/Pyungmoo/Open Source Folder")]
-    public static void OpenSourceFolder()
-    {
-        string path = FindSourceRoot();
-        EditorUtility.RevealInFinder(path);
-    }
-
     private static string FindSourceRoot()
     {
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
         string repoRoot = Directory.GetParent(projectRoot).FullName;
-        string source = Path.Combine(repoRoot, "Metin2Client", "OutdoorC1", "metin2_map_c1");
 
+        string source = Path.Combine(repoRoot, "Metin2Client", "OutdoorC1", "metin2_map_c1");
         if (!Directory.Exists(source))
+        {
             throw new DirectoryNotFoundException(
                 "Pyungmoo kaynak klasörü bulunamadı. Beklenen yol:\n" + source);
+        }
 
         return source;
+    }
+
+    private static string FindTextureSet(string sourceRoot)
+    {
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string repoRoot = Directory.GetParent(projectRoot).FullName;
+        string path = Path.Combine(repoRoot, "Metin2Client", "textureset", "textureset", "metin2_c1.txt");
+
+        if (!File.Exists(path))
+            throw new FileNotFoundException("metin2_c1.txt bulunamadı.", path);
+
+        return path;
     }
 
     private static List<ChunkInfo> DiscoverChunks(string root)
@@ -123,156 +135,314 @@ public static class Metin2PyungmooImporter
             if (!m.Success)
                 continue;
 
-            int x = int.Parse(m.Groups[1].Value);
-            int y = int.Parse(m.Groups[2].Value);
-
             string height = Path.Combine(dir, "height.raw");
-            string minimap = Path.Combine(dir, "minimap.dds");
+            string tile = Path.Combine(dir, "tile.raw");
 
-            if (!File.Exists(height))
+            if (!File.Exists(height) || !File.Exists(tile))
                 continue;
+
+            if (new FileInfo(height).Length != HeightSamples * HeightSamples * 2)
+                throw new InvalidDataException($"{name}/height.raw boyutu beklenen 34322 bayt değil.");
+
+            if (new FileInfo(tile).Length != TileRawSize * TileRawSize)
+                throw new InvalidDataException($"{name}/tile.raw boyutu beklenen 66564 bayt değil.");
 
             result.Add(new ChunkInfo
             {
                 Name = name,
-                X = x,
-                Y = y,
+                X = int.Parse(m.Groups[1].Value),
+                Y = int.Parse(m.Groups[2].Value),
                 Directory = dir,
                 HeightPath = height,
-                MinimapPath = File.Exists(minimap) ? minimap : null
+                TilePath = tile
             });
         }
 
         return result.OrderBy(c => c.X).ThenBy(c => c.Y).ToList();
     }
 
-    private static GameObject BuildChunk(string sourceRoot, ChunkInfo chunk, Transform parent)
+    private static Dictionary<int, TextureEntry> ParseTextureSet(string path)
     {
-        byte[] heightBytes = File.ReadAllBytes(chunk.HeightPath);
-        int expected = HeightSamples * HeightSamples * 2;
+        string[] lines = File.ReadAllLines(path);
+        var result = new Dictionary<int, TextureEntry>();
 
-        if (heightBytes.Length != expected)
-            throw new InvalidDataException(
-                $"{chunk.Name}/height.raw boyutu {heightBytes.Length} bayt; beklenen {expected}.");
+        int currentId = -1;
+        string currentPath = null;
+        float uScale = 1f;
+        float vScale = 1f;
 
-        var vertices = new Vector3[TerrainSamples * TerrainSamples];
-        var uvs = new Vector2[vertices.Length];
-
-        for (int z = 0; z < TerrainSamples; z++)
+        foreach (string rawLine in lines)
         {
-            for (int x = 0; x < TerrainSamples; x++)
+            string line = rawLine.Trim();
+
+            Match start = Regex.Match(line, @"^Start Texture(\d+)$");
+            if (start.Success)
             {
-                int srcIndex = (z * HeightSamples + x) * 2;
-                ushort rawHeight = (ushort)(heightBytes[srcIndex] | (heightBytes[srcIndex + 1] << 8));
-                float y = rawHeight * HeightScaleMetersPerRawUnit;
+                currentId = int.Parse(start.Groups[1].Value);
+                currentPath = null;
+                uScale = 1f;
+                vScale = 1f;
+                continue;
+            }
 
-                int i = z * TerrainSamples + x;
-                vertices[i] = new Vector3(
-                    x * HeightSampleSpacingMeters,
-                    y,
-                    z * HeightSampleSpacingMeters);
+            if (currentId < 0)
+                continue;
 
-                float u = x / (float)(TerrainSamples - 1);
-                float v = z / (float)(TerrainSamples - 1);
-                uvs[i] = new Vector2(u, 1.0f - v);
+            if (currentPath == null && line.StartsWith(""") && line.EndsWith("""))
+            {
+                currentPath = line.Substring(1, line.Length - 2);
+                continue;
+            }
+
+            if (currentPath != null)
+            {
+                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2 &&
+                    float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out float s1) &&
+                    float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out float s2))
+                {
+                    uScale = s1;
+                    vScale = s2;
+                    result[currentId] = new TextureEntry
+                    {
+                        Id = currentId,
+                        SourcePath = currentPath,
+                        UScale = uScale,
+                        VScale = vScale
+                    };
+                    currentId = -1;
+                    currentPath = null;
+                }
             }
         }
 
-        int quadCount = TerrainSamples - 1;
-        int[] triangles = new int[quadCount * quadCount * 6];
-        int ti = 0;
+        if (result.Count == 0)
+            throw new InvalidDataException("metin2_c1.txt içinden TextureSet okunamadı.");
 
-        for (int z = 0; z < quadCount; z++)
+        return result;
+    }
+
+    private static Dictionary<int, Material> BuildTextureMaterials(
+        string sourceRoot,
+        Dictionary<int, TextureEntry> textureSet)
+    {
+        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string repoRoot = Directory.GetParent(projectRoot).FullName;
+
+        string textureOutput = Path.Combine(
+            projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Textures");
+        string materialOutput = "Assets/Metin2Generated/Pyungmoo/Materials";
+
+        Directory.CreateDirectory(textureOutput);
+        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Meshes"));
+        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Materials"));
+
+        var materials = new Dictionary<int, Material>();
+
+        foreach (var pair in textureSet.OrderBy(p => p.Key))
         {
-            for (int x = 0; x < quadCount; x++)
+            TextureEntry entry = pair.Value;
+            string sourceFile = ResolveTerrainTexture(repoRoot, entry.SourcePath);
+
+            if (string.IsNullOrEmpty(sourceFile) || !File.Exists(sourceFile))
             {
-                int a = z * TerrainSamples + x;
+                Debug.LogWarning($"Pyungmoo TextureSet {entry.Id}: kaynak DDS bulunamadı: {entry.SourcePath}");
+                continue;
+            }
+
+            string safeName = $"Tex_{entry.Id:00}_{Sanitize(Path.GetFileNameWithoutExtension(sourceFile))}";
+            string destinationAsset = $"Assets/Metin2Generated/Pyungmoo/Textures/{safeName}.dds";
+            string destinationAbsolute = Path.Combine(
+                projectRoot,
+                destinationAsset.Substring("Assets/".Length).Replace('/', Path.DirectorySeparatorChar));
+
+            if (!File.Exists(destinationAbsolute))
+                File.Copy(sourceFile, destinationAbsolute);
+
+            AssetDatabase.ImportAsset(destinationAsset, ImportAssetOptions.ForceUpdate);
+
+            Texture2D texture = AssetDatabase.LoadAssetAtPath<Texture2D>(destinationAsset);
+            if (texture == null)
+            {
+                Debug.LogWarning($"DDS Unity'ye import edilemedi: {destinationAsset}");
+                continue;
+            }
+
+            var material = new Material(FindGroundShader())
+            {
+                name = $"Pyungmoo_Tex_{entry.Id:00}"
+            };
+
+            material.mainTexture = texture;
+            material.SetTexture("_BaseMap", texture);
+            material.mainTextureScale = new Vector2(entry.UScale, entry.VScale);
+            material.SetFloat("_Smoothness", 0.0f);
+
+            string materialPath = $"{materialOutput}/Pyungmoo_Tex_{entry.Id:00}.mat";
+            DeleteAssetIfExists(materialPath);
+            AssetDatabase.CreateAsset(material, materialPath);
+
+            materials[entry.Id] = material;
+        }
+
+        if (materials.Count == 0)
+            throw new InvalidOperationException("Pyungmoo TextureSet'teki DDS'lerin hiçbiri import edilemedi.");
+
+        return materials;
+    }
+
+    private static string ResolveTerrainTexture(string repoRoot, string sourcePath)
+    {
+        string normalized = sourcePath.Replace('\\', '/');
+        int marker = normalized.IndexOf("terrainmaps/", StringComparison.OrdinalIgnoreCase);
+        if (marker < 0)
+            return null;
+
+        string relative = normalized.Substring(marker + "terrainmaps/".Length);
+        string exactB = Path.Combine(repoRoot, "Metin2Client", "Terrain", "ymir work", "terrainmaps", "b",
+            relative.Substring(relative.IndexOf('/') + 1).Replace('/', Path.DirectorySeparatorChar));
+
+        // metin2_c1.txt references terrainmaps/b/...; use that first.
+        if (File.Exists(exactB))
+            return exactB;
+
+        // Fallback to terrainmaps/c/... for C empire assets.
+        string exactC = Path.Combine(repoRoot, "Metin2Client", "Terrain", "ymir work", "terrainmaps", "c",
+            relative.Substring(relative.IndexOf('/') + 1).Replace('/', Path.DirectorySeparatorChar));
+
+        return File.Exists(exactC) ? exactC : null;
+    }
+
+    private static GameObject BuildChunk(
+        ChunkInfo chunk,
+        Transform parent,
+        Dictionary<int, Material> materials)
+    {
+        byte[] heightBytes = File.ReadAllBytes(chunk.HeightPath);
+        byte[] tileBytes = File.ReadAllBytes(chunk.TilePath);
+
+        var vertices = new Vector3[TerrainVertices * TerrainVertices];
+        var uvs = new Vector2[vertices.Length];
+
+        for (int z = 0; z < TerrainVertices; z++)
+        {
+            for (int x = 0; x < TerrainVertices; x++)
+            {
+                float sourceX = x * 0.5f;
+                float sourceZ = z * 0.5f;
+
+                int x0 = Mathf.Clamp(Mathf.FloorToInt(sourceX), 0, HeightSamples - 2);
+                int z0 = Mathf.Clamp(Mathf.FloorToInt(sourceZ), 0, HeightSamples - 2);
+                int x1 = x0 + 1;
+                int z1 = z0 + 1;
+
+                float fx = sourceX - x0;
+                float fz = sourceZ - z0;
+
+                float h00 = ReadHeight(heightBytes, x0, z0);
+                float h10 = ReadHeight(heightBytes, x1, z0);
+                float h01 = ReadHeight(heightBytes, x0, z1);
+                float h11 = ReadHeight(heightBytes, x1, z1);
+
+                float h0 = Mathf.Lerp(h00, h10, fx);
+                float h1 = Mathf.Lerp(h01, h11, fx);
+                float height = Mathf.Lerp(h0, h1, fz);
+
+                int i = z * TerrainVertices + x;
+                vertices[i] = new Vector3(
+                    x * CellScaleMeters,
+                    height,
+                    z * CellScaleMeters);
+
+                uvs[i] = new Vector2(
+                    x / (float)TerrainCells,
+                    z / (float)TerrainCells);
+            }
+        }
+
+        var textureIds = materials.Keys.OrderBy(id => id).ToList();
+        var submeshTriangles = new Dictionary<int, List<int>>();
+        foreach (int id in textureIds)
+            submeshTriangles[id] = new List<int>(4096);
+
+        int fallbackId = textureIds.Contains(8) ? 8 : textureIds[0];
+
+        for (int z = 0; z < TerrainCells; z++)
+        {
+            for (int x = 0; x < TerrainCells; x++)
+            {
+                // tile.raw is 258 x 258. The playable 256 x 256 region is the inner area.
+                int tileId = tileBytes[(z + 1) * TileRawSize + (x + 1)];
+                if (!submeshTriangles.ContainsKey(tileId))
+                    tileId = fallbackId;
+
+                List<int> triangles = submeshTriangles[tileId];
+
+                int a = z * TerrainVertices + x;
                 int b = a + 1;
-                int c = a + TerrainSamples;
+                int c = a + TerrainVertices;
                 int d = c + 1;
 
-                triangles[ti++] = a;
-                triangles[ti++] = c;
-                triangles[ti++] = b;
+                triangles.Add(a);
+                triangles.Add(c);
+                triangles.Add(b);
 
-                triangles[ti++] = b;
-                triangles[ti++] = c;
-                triangles[ti++] = d;
+                triangles.Add(b);
+                triangles.Add(c);
+                triangles.Add(d);
             }
         }
 
         string meshPath = $"{GeneratedRoot}/Meshes/Pyungmoo_{chunk.Name}.asset";
-        string materialPath = $"{GeneratedRoot}/Materials/Pyungmoo_{chunk.Name}.mat";
-
         DeleteAssetIfExists(meshPath);
-        DeleteAssetIfExists(materialPath);
 
         var mesh = new Mesh
         {
-            name = $"Pyungmoo_{chunk.Name}",
-            vertices = vertices,
-            triangles = triangles,
-            uv = uvs
+            name = $"Pyungmoo_{chunk.Name}"
         };
+
+        mesh.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32;
+        mesh.vertices = vertices;
+        mesh.uv = uvs;
+        mesh.subMeshCount = textureIds.Count;
+
+        for (int i = 0; i < textureIds.Count; i++)
+            mesh.SetTriangles(submeshTriangles[textureIds[i]], i, false);
+
         mesh.RecalculateNormals();
         mesh.RecalculateBounds();
         mesh.UploadMeshData(false);
 
         AssetDatabase.CreateAsset(mesh, meshPath);
 
-        var material = new Material(FindGroundShader())
-        {
-            name = $"Pyungmoo_{chunk.Name}"
-        };
-        material.SetFloat("_Smoothness", 0.0f);
-
-        if (!string.IsNullOrEmpty(chunk.MinimapPath))
-        {
-            string destination = $"{GeneratedRoot}/Minimap/{chunk.Name}.dds";
-            string absoluteDestination = Path.GetFullPath(Path.Combine(
-                Directory.GetParent(Application.dataPath).FullName,
-                destination.Substring("Assets/".Length)));
-
-            Directory.CreateDirectory(Path.GetDirectoryName(absoluteDestination));
-
-            if (File.Exists(absoluteDestination))
-                File.Delete(absoluteDestination);
-
-            File.Copy(chunk.MinimapPath, absoluteDestination);
-            AssetDatabase.ImportAsset(destination, ImportAssetOptions.ForceUpdate);
-
-            var texture = AssetDatabase.LoadAssetAtPath<Texture2D>(destination);
-            if (texture != null)
-            {
-                texture.wrapMode = TextureWrapMode.Clamp;
-                texture.filterMode = FilterMode.Bilinear;
-                material.mainTexture = texture;
-                material.SetTexture("_BaseMap", texture);
-            }
-        }
-
-        AssetDatabase.CreateAsset(material, materialPath);
-
         var go = new GameObject($"Chunk_{chunk.Name}");
         go.transform.SetParent(parent, false);
-        go.transform.localPosition = new Vector3(
-            chunk.X * CellsPerChunk * CellScaleMeters,
+        go.localPosition = new Vector3(
+            chunk.X * TerrainCells * CellScaleMeters,
             0.0f,
-            chunk.Y * CellsPerChunk * CellScaleMeters);
-
+            chunk.Y * TerrainCells * CellScaleMeters);
         go.isStatic = true;
-
-        var renderer = go.AddComponent<MeshRenderer>();
-        renderer.sharedMaterial = material;
 
         var filter = go.AddComponent<MeshFilter>();
         filter.sharedMesh = mesh;
+
+        var renderer = go.AddComponent<MeshRenderer>();
+        renderer.sharedMaterials = textureIds.Select(id => materials[id]).ToArray();
 
         var collider = go.AddComponent<MeshCollider>();
         collider.sharedMesh = mesh;
         collider.convex = false;
 
         return go;
+    }
+
+    private static float ReadHeight(byte[] bytes, int x, int z)
+    {
+        int index = (z * HeightSamples + x) * 2;
+        ushort raw = (ushort)(bytes[index] | (bytes[index + 1] << 8));
+        return raw * HeightScaleMetersPerRawUnit;
     }
 
     private static Shader FindGroundShader()
@@ -310,9 +480,9 @@ public static class Metin2PyungmooImporter
         player.transform.SetParent(parent, false);
 
         Vector3 center = bounds.center;
-        player.transform.position = new Vector3(center.x, bounds.max.y + 5.0f, center.z);
+        player.transform.position = new Vector3(center.x, bounds.max.y + 8.0f, center.z);
 
-        var primitiveCollider = player.GetComponent<CapsuleCollider>();
+        CapsuleCollider primitiveCollider = player.GetComponent<CapsuleCollider>();
         if (primitiveCollider != null)
             UnityEngine.Object.DestroyImmediate(primitiveCollider);
 
@@ -323,7 +493,7 @@ public static class Metin2PyungmooImporter
         controller.slopeLimit = 48.0f;
         controller.stepOffset = 0.35f;
 
-        var bodyRenderer = player.GetComponent<MeshRenderer>();
+        Renderer bodyRenderer = player.GetComponent<Renderer>();
         if (bodyRenderer != null)
         {
             var playerMaterial = new Material(FindGroundShader());
@@ -342,52 +512,42 @@ public static class Metin2PyungmooImporter
         camera.fieldOfView = 60.0f;
         camera.nearClipPlane = 0.05f;
         camera.farClipPlane = 5000.0f;
-
         cameraObject.AddComponent<AudioListener>();
 
         movement.CameraTransform = cameraObject.transform;
         movement.Camera = camera;
-
-        Camera.main?.gameObject.SetActive(false);
     }
 
-    private static EditorBuildSettingsScene[] AddSceneToBuildSettings(string scenePath)
+    private static void PrepareGeneratedRoot()
     {
-        var scenes = EditorBuildSettings.scenes.ToList();
-        scenes.RemoveAll(s => s.path.Equals(scenePath, StringComparison.OrdinalIgnoreCase));
-        scenes.Insert(0, new EditorBuildSettingsScene(scenePath, true));
-        return scenes.ToArray();
-    }
+        if (AssetDatabase.IsValidFolder(GeneratedRoot))
+            AssetDatabase.DeleteAsset(GeneratedRoot);
 
-    private static float GetMapWidth(List<ChunkInfo> chunks)
-    {
-        return (chunks.Max(c => c.X) + 1) * CellsPerChunk * CellScaleMeters;
-    }
-
-    private static float GetMapDepth(List<ChunkInfo> chunks)
-    {
-        return (chunks.Max(c => c.Y) + 1) * CellsPerChunk * CellScaleMeters;
-    }
-
-    private static void PrepareGeneratedFolders()
-    {
         string projectRoot = Directory.GetParent(Application.dataPath).FullName;
-
-        foreach (string relative in new[]
-                 {
-                     "Assets/Metin2Generated/Pyungmoo/Meshes",
-                     "Assets/Metin2Generated/Pyungmoo/Materials",
-                     "Assets/Metin2Generated/Pyungmoo/Minimap"
-                 })
-        {
-            Directory.CreateDirectory(Path.Combine(projectRoot, relative));
-        }
+        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Meshes"));
+        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Materials"));
+        Directory.CreateDirectory(Path.Combine(projectRoot, "Assets", "Metin2Generated", "Pyungmoo", "Textures"));
     }
 
     private static void DeleteAssetIfExists(string assetPath)
     {
         if (AssetDatabase.LoadAssetAtPath<UnityEngine.Object>(assetPath) != null)
             AssetDatabase.DeleteAsset(assetPath);
+    }
+
+    private static void AddSceneToBuildSettings(string scenePath)
+    {
+        var scenes = EditorBuildSettings.scenes.ToList();
+        scenes.RemoveAll(s => s.path.Equals(scenePath, StringComparison.OrdinalIgnoreCase));
+        scenes.Insert(0, new EditorBuildSettingsScene(scenePath, true));
+        EditorBuildSettings.scenes = scenes.ToArray();
+    }
+
+    private static string Sanitize(string name)
+    {
+        foreach (char c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+        return name.Replace(' ', '_');
     }
 
     private sealed class ChunkInfo
@@ -397,6 +557,14 @@ public static class Metin2PyungmooImporter
         public int Y;
         public string Directory;
         public string HeightPath;
-        public string MinimapPath;
+        public string TilePath;
+    }
+
+    private sealed class TextureEntry
+    {
+        public int Id;
+        public string SourcePath;
+        public float UScale;
+        public float VScale;
     }
 }
