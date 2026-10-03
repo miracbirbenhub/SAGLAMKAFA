@@ -455,6 +455,7 @@ public static class Metin2PyungmooObjectImporter
         {
             ".pr",
             ".prb",
+            ".prt",
             ".ptr",
             ".prt",
             ".prd",
@@ -732,6 +733,9 @@ public static class Metin2PyungmooObjectImporter
     {
         string projectRoot =
             Directory.GetParent(Application.dataPath).FullName;
+
+        string repoRoot =
+            Directory.GetParent(projectRoot).FullName;
 
         string outputRoot =
             Path.Combine(
