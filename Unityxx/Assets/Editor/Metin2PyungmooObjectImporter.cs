@@ -110,16 +110,9 @@ public static class Metin2PyungmooObjectImporter
                 $"missing Property IDs={uniqueMissingPropertyIds}, " +
                 $"Property index={properties.Count}");
 
-            // Resolve each Property's source by its full "ymir work/..." path,
-            // not merely by basename. The client can contain the same filename
-            // in multiple zones/maps.
-            Dictionary<string, string> sourceByRelativePath =
-                BuildSourceFileIndex(repoRoot);
             // Normal map import is deterministic and uses prepared FBXs only.
             // GR2/SPT -> FBX is intentionally manual.
             ConversionStats conversion = new ConversionStats();
-
-            string noesisPath = FindNoesis(repoRoot);
 
             UnityEngine.Debug.Log(
                 "Pyungmoo: otomatik Noesis dönüşümü KAPALI. " +
@@ -287,8 +280,6 @@ public static class Metin2PyungmooObjectImporter
             }
 
             report.AppendLine();
-            report.AppendLine(
-                $"Noesis bulundu: {(string.IsNullOrEmpty(noesisPath) ? "hayır" : "evet")}");
             report.AppendLine(
                 "Otomatik Noesis dönüşümü: KAPALI");
             report.AppendLine(
