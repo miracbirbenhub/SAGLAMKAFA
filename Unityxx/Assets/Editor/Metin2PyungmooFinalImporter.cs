@@ -639,9 +639,43 @@ public static class Metin2PyungmooFinalImporter
                 result, scores, ambiguous,
                 sourcePath, property, 300);
 
+            string normalizedSourcePath =
+                sourcePath.Replace('\\', '/');
+
             RegisterStringAlias(
                 result, scores, ambiguous,
-                sourcePath.Replace('\\', '/'), property, 310);
+                normalizedSourcePath, property, 310);
+
+            RegisterStringAlias(
+                result, scores, ambiguous,
+                normalizedSourcePath.ToUpperInvariant(), property, 320);
+
+            RegisterStringAlias(
+                result, scores, ambiguous,
+                "./" + normalizedSourcePath.ToUpperInvariant(), property, 325);
+
+            RegisterStringAlias(
+                result, scores, ambiguous,
+                "./" + normalizedSourcePath.Replace('/', '\\').ToUpperInvariant(), property, 325);
+
+            RegisterStringAlias(
+                result, scores, ambiguous,
+                Path.GetFileName(sourcePath).ToUpperInvariant(), property, 365);
+
+            RegisterStringAlias(
+                result, scores, ambiguous,
+                Path.GetFileNameWithoutExtension(sourcePath).ToUpperInvariant(), property, 355);
+
+            try
+            {
+                uint propertyFileCrc = ComputeCrc32File(file);
+                RegisterId(
+                    result, scores, ambiguous,
+                    propertyFileCrc, property, 850);
+            }
+            catch
+            {
+            }
 
             string sourceFile =
                 FindSourceFile(repoRoot, sourcePath, ResolveC1CanonicalKey(normalized));
