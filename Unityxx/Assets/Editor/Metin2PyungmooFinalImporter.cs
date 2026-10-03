@@ -579,11 +579,10 @@ public static class Metin2PyungmooFinalImporter
 
             string normalized = NormalizeModelKey(sourceName);
 
-            if (!normalized.StartsWith("c1-", StringComparison.OrdinalIgnoreCase) &&
-                !normalized.StartsWith("c1_", StringComparison.OrdinalIgnoreCase))
-                continue;
+            string canonicalModelKey = ResolveC1CanonicalKey(normalized);
 
-            if (!buildingCanonical.ContainsKey(normalized))
+            if (string.IsNullOrEmpty(canonicalModelKey) ||
+                !buildingCanonical.ContainsKey(canonicalModelKey))
                 continue;
 
             Match idMatch = Regex.Match(
@@ -645,7 +644,7 @@ public static class Metin2PyungmooFinalImporter
                 sourcePath.Replace('\\', '/'), property, 310);
 
             string sourceFile =
-                FindSourceFile(repoRoot, sourcePath);
+                FindSourceFile(repoRoot, sourcePath, ResolveC1CanonicalKey(normalized));
 
             if (!string.IsNullOrEmpty(sourceFile) &&
                 File.Exists(sourceFile))
@@ -735,7 +734,7 @@ public static class Metin2PyungmooFinalImporter
         }
     }
 
-    private static string FindSourceFile(string repoRoot, string sourcePath)
+    private static string FindSourceFile(string repoRoot, string sourcePath, string canonicalModelKey)
     {
         string fileName = Path.GetFileName(sourcePath);
         if (string.IsNullOrWhiteSpace(fileName))
@@ -774,6 +773,16 @@ public static class Metin2PyungmooFinalImporter
         if (File.Exists(directCandidate))
             return directCandidate;
 
+        if (!string.IsNullOrWhiteSpace(canonicalModelKey))
+        {
+            string canonicalFileName = canonicalModelKey + Path.GetExtension(fileName);
+            string canonicalCandidate =
+                Path.Combine(repoRoot, "Metin2Client", "Zone", "ymir work", "zone", "c", "building", canonicalFileName);
+
+            if (File.Exists(canonicalCandidate))
+                return canonicalCandidate;
+        }
+
         string searchRoot =
             Path.Combine(repoRoot, "Metin2Client", "Zone");
 
@@ -796,6 +805,27 @@ public static class Metin2PyungmooFinalImporter
         }
 
         return null;
+    }
+
+    private static string ResolveC1CanonicalKey(string normalized)
+    {
+        if (string.IsNullOrWhiteSpace(normalized))
+            return string.Empty;
+
+        normalized = NormalizeModelKey(normalized);
+
+        if (normalized.StartsWith("c1-", StringComparison.OrdinalIgnoreCase) ||
+            normalized.StartsWith("c1_", StringComparison.OrdinalIgnoreCase))
+            return normalized;
+
+        foreach (char prefix in new[] { 'a', 'b' })
+        {
+            if (normalized.StartsWith(prefix + "1-", StringComparison.OrdinalIgnoreCase) ||
+                normalized.StartsWith(prefix + "1_", StringComparison.OrdinalIgnoreCase))
+                return "c" + normalized.Substring(1);
+        }
+
+        return string.Empty;
     }
 
     private static uint ComputeCrc32File(string path)
