@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Process = System.Diagnostics.Process;
-using ProcessStartInfo = System.Diagnostics.ProcessStartInfo;
+
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -19,9 +20,10 @@ public static class Metin2PyungmooObjectImporter
     private const string AutoModelFolder = "Assets/Metin2Generated/Pyungmoo/AutoModels";
     private const string ReportPath = "Assets/Metin2Generated/Pyungmoo/PyungmooObjectImportReport.txt";
 
-    // Metin2 map/object coordinates: 100 world units = 1 Unity meter.
-    // The source Y axis points opposite to Unity's Z axis.
+    // Metin2 world units: 100 source units = 1 Unity metre.
+    // Source Y axis is inverted relative to Unity Z.
     private const float CoordinateScale = 0.01f;
+
     private const int NoesisTimeoutMs = 120000;
 
     [MenuItem("Metin2/Pyungmoo/Import Map Objects")]
@@ -30,6 +32,7 @@ public static class Metin2PyungmooObjectImporter
         try
         {
             Scene scene = OpenPyungmooScene();
+
             GameObject mapRoot = GameObject.Find("Pyungmoo");
             if (mapRoot == null)
                 throw new InvalidOperationException("Pyungmoo GameObject'i bulunamadı.");
@@ -49,204 +52,252 @@ public static class Metin2PyungmooObjectImporter
             List<string> areaFiles = DiscoverAreaFiles(mapRootPath);
             if (areaFiles.Count == 0)
                 throw new InvalidOperationException(
-                    "C1 map içinde areadata.txt bulunamadı:\n" + mapRootPath);
+                    "Pyungmoo C1 içinde areadata.txt bulunamadı:\n" + mapRootPath);
 
-            // IMPORTANT:
-            // The CRC written in AreaData is the CRC32 ObjectID of the actual
-            // source object file. Do not depend on a matching .prb/.prt filename.
-            string zoneRoot = FindDirectoryOrThrow(
+            string propertyRoot = FindDirectoryOrThrow(
                 repoRoot,
-                Path.Combine("Metin2Client", "Zone"),
-                Path.Combine("Zone"));
+                Path.Combine("Metin2Client", "Property", "property"),
+                Path.Combine("Metin2Client", "Property"),
+                Path.Combine("Property", "property"),
+                Path.Combine("Property"));
 
-            Dictionary<uint, SourceObject> sourceByCrc = BuildSourceObjectIndex(zoneRoot, repoRoot);
+            Dictionary<uint, PropertyEntry> properties = LoadProperties(propertyRoot);
 
-            UnityEngine.Debug.Log(
-                $"Pyungmoo source object index: {sourceByCrc.Count} CRC");
+            var allObjects = new List<AreaObject>();
 
-            List<AreaObject> allObjects = new List<AreaObject>();
             foreach (string areaFile in areaFiles)
                 allObjects.AddRange(ParseAreaData(areaFile));
 
-            int directCrcMatches = allObjects.Count(o => sourceByCrc.ContainsKey(o.PropertyId));
-            int uniqueDirectCrcMatches = allObjects
-                .Where(o => sourceByCrc.ContainsKey(o.PropertyId))
+            int propertyMatches = allObjects.Count(
+                o => properties.ContainsKey(o.PropertyId));
+
+            int uniquePropertyMatches = allObjects
+                .Where(o => properties.ContainsKey(o.PropertyId))
                 .Select(o => o.PropertyId)
                 .Distinct()
                 .Count();
 
             UnityEngine.Debug.Log(
-                $"Pyungmoo CRC preflight: objects={allObjects.Count}, " +
-                $"directSourceMatches={directCrcMatches}, " +
-                $"uniqueMatches={uniqueDirectCrcMatches}");
+                $"Pyungmoo preflight: AreaData={allObjects.Count}, " +
+                $"Property matches={propertyMatches}, " +
+                $"unique Property matches={uniquePropertyMatches}, " +
+                $"Property index={properties.Count}");
+
+            // Build a local filename index once. We resolve sources by the
+            // model basename written inside the Property file.
+            Dictionary<string, string> sourceByName =
+                BuildSourceFileIndex(repoRoot);
 
             string noesisPath = FindNoesis(repoRoot);
 
-            int autoConverted = 0;
-            int existingModels = 0;
-            int missingSource = 0;
-            int conversionFailed = 0;
+            ConversionStats conversion = new ConversionStats();
 
             if (!string.IsNullOrEmpty(noesisPath))
             {
-                HashSet<string> neededNames = allObjects
-                    .Where(o => sourceByCrc.ContainsKey(o.PropertyId))
-                    .Select(o => sourceByCrc[o.PropertyId])
-                    .Where(s => IsConvertible3DSource(s))
-                    .Select(s => Path.GetFileNameWithoutExtension(s.Path))
+                HashSet<string> neededModels = allObjects
+                    .Where(o => properties.ContainsKey(o.PropertyId))
+                    .Select(o => properties[o.PropertyId])
+                    .Where(p => IsGeometryProperty(p))
+                    .Select(p => Path.GetFileNameWithoutExtension(p.SourcePath))
+                    .Where(n => !string.IsNullOrWhiteSpace(n))
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-                ConversionStats conversion = AutoConvertMissingGr2(
+                conversion = AutoConvertMissingModels(
                     noesisPath,
-                    neededNames,
-                    sourceByCrc.Values,
-                    repoRoot);
-
-                autoConverted = conversion.Converted;
-                existingModels = conversion.AlreadyExisting;
-                missingSource = conversion.MissingSource;
-                conversionFailed = conversion.Failed;
+                    neededModels,
+                    sourceByName);
             }
             else
             {
                 UnityEngine.Debug.LogWarning(
-                    "Noesis.exe bulunamadı. Var olan FBX modelleri kullanılacak; " +
-                    "eksik GR2'ler otomatik dönüştürülmeyecek.");
+                    "Noesis.exe bulunamadı; eksik modeller dönüştürülmeyecek.");
             }
 
             AssetDatabase.Refresh();
 
             Dictionary<string, GameObject> modelIndex = BuildModelIndex();
 
-            int placed = 0;
-            int noSourceMatch = 0;
-            int noUnityModel = 0;
-            int unsupportedSource = 0;
-            int colliderCount = 0;
-
-            var missingCrcs = new Dictionary<uint, int>();
-            var missingModelNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-            var placedSources = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-
-            Transform currentChunkRoot = null;
-            string currentChunkName = null;
             int chunkCount = 0;
+            int placed = 0;
+            int missingProperty = 0;
+            int missingModel = 0;
+            int unsupportedProperty = 0;
+
+            var missingPropertyIds = new Dictionary<uint, int>();
+            var missingModels = new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase);
+
+            string currentChunk = null;
+            Transform currentChunkRoot = null;
 
             foreach (string areaFile in areaFiles)
             {
-                string chunkName = Path.GetFileName(Path.GetDirectoryName(areaFile));
-                if (!string.Equals(currentChunkName, chunkName, StringComparison.OrdinalIgnoreCase))
+                string chunkName = Path.GetFileName(
+                    Path.GetDirectoryName(areaFile));
+
+                if (!string.Equals(
+                        currentChunk,
+                        chunkName,
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    currentChunkName = chunkName;
-                    currentChunkRoot = new GameObject("Objects_" + chunkName).transform;
-                    currentChunkRoot.SetParent(objectRoot, false);
+                    currentChunk = chunkName;
+
+                    currentChunkRoot = new GameObject(
+                        "Objects_" + chunkName).transform;
+
+                    currentChunkRoot.SetParent(
+                        objectRoot,
+                        false);
+
                     chunkCount++;
                 }
 
-                foreach (AreaObject areaObject in ParseAreaData(areaFile))
+                foreach (AreaObject obj in ParseAreaData(areaFile))
                 {
-                    if (!sourceByCrc.TryGetValue(areaObject.PropertyId, out SourceObject source))
+                    if (!properties.TryGetValue(
+                            obj.PropertyId,
+                            out PropertyEntry property))
                     {
-                        noSourceMatch++;
-                        Increment(missingCrcs, areaObject.PropertyId);
+                        missingProperty++;
+                        Increment(
+                            missingPropertyIds,
+                            obj.PropertyId);
                         continue;
                     }
 
-                    if (!IsConvertible3DSource(source))
+                    if (!IsGeometryProperty(property))
                     {
-                        unsupportedSource++;
+                        unsupportedProperty++;
                         continue;
                     }
 
-                    string modelName = Path.GetFileNameWithoutExtension(source.Path);
+                    string modelName =
+                        Path.GetFileNameWithoutExtension(
+                            property.SourcePath);
 
-                    if (!TryFindModel(modelIndex, modelName, out GameObject model))
+                    if (!TryFindModel(
+                            modelIndex,
+                            modelName,
+                            out GameObject model))
                     {
-                        noUnityModel++;
-                        Increment(missingModelNames, modelName);
+                        missingModel++;
+                        Increment(
+                            missingModels,
+                            modelName);
                         continue;
                     }
 
-                    GameObject instance = PrefabUtility.InstantiatePrefab(model) as GameObject;
+                    GameObject instance =
+                        PrefabUtility.InstantiatePrefab(model)
+                        as GameObject;
+
                     if (instance == null)
                     {
-                        noUnityModel++;
-                        Increment(missingModelNames, modelName);
+                        missingModel++;
+                        Increment(
+                            missingModels,
+                            modelName);
                         continue;
                     }
 
                     instance.name =
-                        $"OBJ_{areaObject.ObjectIndex:000}_{Sanitize(modelName)}";
+                        $"OBJ_{obj.ObjectIndex:000}_{Sanitize(property.PropertyName)}";
 
-                    instance.transform.SetParent(currentChunkRoot, false);
-                    instance.transform.position = ConvertPosition(areaObject.Position);
+                    instance.transform.SetParent(
+                        currentChunkRoot,
+                        false);
 
-                    // AreaData rotations are XYZ in source coordinates.
-                    // For the common C1 objects, the third value is the yaw.
-                    instance.transform.rotation = ConvertRotation(areaObject.Rotation);
+                    instance.transform.position =
+                        new Vector3(
+                            obj.Position.x * CoordinateScale,
+                            obj.Position.z * CoordinateScale,
+                            -obj.Position.y * CoordinateScale);
+
+                    instance.transform.rotation =
+                        ConvertRotation(obj.Rotation);
 
                     instance.isStatic = true;
 
-                    if (AddMeshColliders(instance))
-                        colliderCount++;
+                    AddMeshColliders(instance);
 
                     placed++;
-                    Increment(placedSources, modelName);
                 }
             }
 
-            StringBuilder report = new StringBuilder();
+            var report = new StringBuilder();
+
             report.AppendLine("Pyungmoo Object Import Report");
-            report.AppendLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            report.AppendLine(
+                DateTime.Now.ToString(
+                    "yyyy-MM-dd HH:mm:ss",
+                    CultureInfo.InvariantCulture));
             report.AppendLine();
             report.AppendLine($"Map root: {mapRootPath}");
             report.AppendLine($"AreaData files: {areaFiles.Count}");
-            report.AppendLine($"Chunk sayısı: {chunkCount}");
+            report.AppendLine($"Chunk: {chunkCount}");
             report.AppendLine($"AreaData objesi: {allObjects.Count}");
-            report.AppendLine($"Direct CRC -> source eşleşmesi: {directCrcMatches}");
-            report.AppendLine($"Direct CRC unique eşleşmesi: {uniqueDirectCrcMatches}");
-            report.AppendLine($"Yerleştirilen: {placed}");
-            report.AppendLine($"Eksik source CRC: {noSourceMatch}");
-            report.AppendLine($"Unity model eksik: {noUnityModel}");
-            report.AppendLine($"Desteklenmeyen source türü: {unsupportedSource}");
-            report.AppendLine($"Yeni FBX: {autoConverted}");
-            report.AppendLine($"Zaten mevcut model: {existingModels}");
-            report.AppendLine($"Kaynak bulunamadı: {missingSource}");
-            report.AppendLine($"Noesis dönüşüm hatası: {conversionFailed}");
-            report.AppendLine($"Eklenen MeshCollider: {colliderCount}");
-            report.AppendLine($"Noesis: {(string.IsNullOrEmpty(noesisPath) ? "bulunamadı" : noesisPath)}");
+            report.AppendLine(
+                $"Property eşleşmesi: {propertyMatches}");
+            report.AppendLine(
+                $"Unique Property eşleşmesi: {uniquePropertyMatches}");
+            report.AppendLine(
+                $"Yerleştirilen: {placed}");
+            report.AppendLine(
+                $"Eksik Property: {missingProperty}");
+            report.AppendLine(
+                $"Eksik model/FBX: {missingModel}");
+            report.AppendLine(
+                $"Desteklenmeyen Property türü: {unsupportedProperty}");
+            report.AppendLine(
+                $"Yeni FBX: {conversion.Converted}");
+            report.AppendLine(
+                $"Mevcut model: {conversion.AlreadyExisting}");
+            report.AppendLine(
+                $"Kaynak bulunamadı: {conversion.MissingSource}");
+            report.AppendLine(
+                $"Noesis hatası: {conversion.Failed}");
             report.AppendLine();
-            report.AppendLine("Noesis parametresi: -rotate 90 0 0");
-            report.AppendLine("CRC yöntemi: source object dosyasının byte içeriklerinden CRC32.");
+            report.AppendLine(
+                $"Noesis: {(string.IsNullOrEmpty(noesisPath) ? "bulunamadı" : noesisPath)}");
+            report.AppendLine(
+                "Noesis dönüşümü: -rotate 90 0 0");
+            report.AppendLine(
+                "Koordinat ölçeği: 100 Metin2 unit = 1 Unity metre");
             report.AppendLine();
 
-            if (placedSources.Count > 0)
+            if (missingModels.Count > 0)
             {
-                report.AppendLine("Yerleştirilen model adları:");
-                foreach (var item in placedSources.OrderByDescending(x => x.Value))
-                    report.AppendLine($"  {item.Key} x{item.Value}");
+                report.AppendLine(
+                    "Bulunamayan Unity model adları:");
+
+                foreach (var item in missingModels
+                             .OrderByDescending(x => x.Value))
+                {
+                    report.AppendLine(
+                        $"  {item.Key} x{item.Value}");
+                }
+
                 report.AppendLine();
             }
 
-            if (missingModelNames.Count > 0)
+            if (missingPropertyIds.Count > 0)
             {
-                report.AppendLine("Unity'de bulunamayan model adları:");
-                foreach (var item in missingModelNames.OrderByDescending(x => x.Value))
-                    report.AppendLine($"  {item.Key} x{item.Value}");
-                report.AppendLine();
-            }
+                report.AppendLine(
+                    "Bulunamayan Property ID'leri:");
 
-            if (missingCrcs.Count > 0)
-            {
-                report.AppendLine("Kaynak dosyada bulunamayan CRC'ler:");
-                foreach (var item in missingCrcs.OrderByDescending(x => x.Value))
-                    report.AppendLine($"  {item.Key} x{item.Value}");
+                foreach (var item in missingPropertyIds
+                             .OrderByDescending(x => x.Value))
+                {
+                    report.AppendLine(
+                        $"  {item.Key} x{item.Value}");
+                }
             }
 
             WriteReport(report.ToString());
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
+
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
 
@@ -255,19 +306,20 @@ public static class Metin2PyungmooObjectImporter
             EditorUtility.DisplayDialog(
                 "Pyungmoo objeleri hazır",
                 $"Chunk: {chunkCount}\n" +
-                $"AreaData objesi: {allObjects.Count}\n" +
-                $"CRC -> source: {directCrcMatches}\n" +
+                $"AreaData: {allObjects.Count}\n" +
+                $"Property eşleşmesi: {propertyMatches}\n" +
                 $"Yerleştirilen: {placed}\n" +
-                $"Eksik source: {noSourceMatch}\n" +
-                $"Eksik Unity model: {noUnityModel}\n" +
-                $"Yeni FBX: {autoConverted}\n" +
-                $"Noesis hata: {conversionFailed}\n\n" +
-                $"Detay raporu:\n{ReportPath}",
+                $"Eksik Property: {missingProperty}\n" +
+                $"Eksik model: {missingModel}\n" +
+                $"Yeni FBX: {conversion.Converted}\n" +
+                $"Noesis hata: {conversion.Failed}\n\n" +
+                $"Rapor:\n{ReportPath}",
                 "Tamam");
         }
         catch (Exception ex)
         {
             UnityEngine.Debug.LogException(ex);
+
             EditorUtility.DisplayDialog(
                 "Pyungmoo object import hatası",
                 ex.Message,
@@ -277,9 +329,6 @@ public static class Metin2PyungmooObjectImporter
 
     private static Scene OpenPyungmooScene()
     {
-        // Unity tarafında proje içindeki Assets yolunu doğrudan kullan.
-        // Fiziksel dosya yolu üretmek yerine AssetDatabase kontrolü yapıyoruz;
-        // böylece repo/project klasör derinliği değişse bile sahne bulunur.
         SceneAsset sceneAsset =
             AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
 
@@ -305,7 +354,9 @@ public static class Metin2PyungmooObjectImporter
 
     private static string GetRepoRoot()
     {
-        string projectRoot = Directory.GetParent(Application.dataPath).FullName;
+        string projectRoot =
+            Directory.GetParent(Application.dataPath).FullName;
+
         return Directory.GetParent(projectRoot).FullName;
     }
 
@@ -315,270 +366,416 @@ public static class Metin2PyungmooObjectImporter
     {
         foreach (string relative in candidates)
         {
-            string full = Path.Combine(repoRoot, relative);
+            string full = Path.Combine(
+                repoRoot,
+                relative);
+
             if (Directory.Exists(full))
                 return full;
         }
 
-        string parent = Directory.GetParent(repoRoot)?.FullName;
+        string parent =
+            Directory.GetParent(repoRoot)?.FullName;
+
         if (!string.IsNullOrEmpty(parent))
         {
             foreach (string relative in candidates)
             {
-                string leaf = Path.GetFileName(
-                    relative.TrimEnd(
-                        Path.DirectorySeparatorChar,
-                        Path.AltDirectorySeparatorChar));
+                string leaf =
+                    Path.GetFileName(
+                        relative.TrimEnd(
+                            Path.DirectorySeparatorChar,
+                            Path.AltDirectorySeparatorChar));
 
                 try
                 {
-                    string found = Directory
-                        .EnumerateDirectories(
-                            parent,
-                            leaf,
-                            SearchOption.AllDirectories)
-                        .FirstOrDefault();
+                    string found =
+                        Directory.EnumerateDirectories(
+                                parent,
+                                leaf,
+                                SearchOption.AllDirectories)
+                            .FirstOrDefault();
 
                     if (!string.IsNullOrEmpty(found))
                         return found;
                 }
                 catch
                 {
-                    // Explicit candidates were already tested.
                 }
             }
         }
 
         throw new DirectoryNotFoundException(
-            "Klasör bulunamadı: " +
-            string.Join(" | ", candidates));
+            "Gerekli klasör bulunamadı:\n" +
+            string.Join("\n", candidates));
     }
 
-    private static List<string> DiscoverAreaFiles(string mapRoot)
+    private static List<string> DiscoverAreaFiles(
+        string mapRoot)
     {
-        return Directory
-            .EnumerateFiles(
+        return Directory.EnumerateFiles(
                 mapRoot,
                 "areadata.txt",
                 SearchOption.AllDirectories)
-            .Where(IsSixDigitChunkParent)
+            .Where(
+                p =>
+                Regex.IsMatch(
+                    Path.GetFileName(
+                        Path.GetDirectoryName(p)) ?? string.Empty,
+                    @"^\d{6}$"))
             .OrderBy(
-                p => Path.GetFileName(Path.GetDirectoryName(p)),
+                p => Path.GetFileName(
+                    Path.GetDirectoryName(p)),
                 StringComparer.Ordinal)
             .ToList();
     }
 
-    private static bool IsSixDigitChunkParent(string areaFile)
+    private static Dictionary<uint, PropertyEntry>
+        LoadProperties(string propertyRoot)
     {
-        string name = Path.GetFileName(Path.GetDirectoryName(areaFile));
-        return Regex.IsMatch(name ?? string.Empty, @"^\d{6}$");
-    }
+        var result =
+            new Dictionary<uint, PropertyEntry>();
 
-    private static Dictionary<uint, SourceObject> BuildSourceObjectIndex(
-        string zoneRoot,
-        string repoRoot)
-    {
-        var result = new Dictionary<uint, SourceObject>();
-
-        foreach (string file in EnumerateObjectSourceFiles(zoneRoot, repoRoot))
+        string[] allowedExtensions =
         {
-            string ext = Path.GetExtension(file);
+            ".pr",
+            ".prb",
+            ".ptr",
+            ".prd",
+            ".pte",
+            ".pre",
+            ".pra"
+        };
 
-            // Only formats that can represent a map object or tree model are
-            // indexed here. Effects/ambience are not forced into FBX.
-            if (!ext.Equals(".gr2", StringComparison.OrdinalIgnoreCase) &&
-                !ext.Equals(".spt", StringComparison.OrdinalIgnoreCase))
-                continue;
+        IEnumerable<string> files =
+            Directory.EnumerateFiles(
+                    propertyRoot,
+                    "*.*",
+                    SearchOption.AllDirectories)
+                .Where(
+                    f =>
+                    allowedExtensions.Contains(
+                        Path.GetExtension(f),
+                        StringComparer.OrdinalIgnoreCase));
 
+        foreach (string file in files)
+        {
             try
             {
-                uint crc = ComputeCrc32(file);
+                string text = File.ReadAllText(file);
 
-                if (!result.ContainsKey(crc))
+                Match idMatch =
+                    Regex.Match(
+                        text,
+                        @"(?m)^\s*YPRT\s*\r?\n\s*(\d+)\s*$",
+                        RegexOptions.CultureInvariant);
+
+                if (!idMatch.Success)
+                    continue;
+
+                if (!uint.TryParse(
+                        idMatch.Groups[1].Value,
+                        NumberStyles.None,
+                        CultureInfo.InvariantCulture,
+                        out uint id))
                 {
-                    result.Add(
-                        crc,
-                        new SourceObject
-                        {
-                            Crc = crc,
-                            Path = file
-                        });
+                    continue;
+                }
+
+                Match propertyNameMatch =
+                    Regex.Match(
+                        text,
+                        @"(?mi)^\s*propertyname\s+""([^""]+)""");
+
+                string propertyName =
+                    propertyNameMatch.Success
+                        ? propertyNameMatch.Groups[1].Value
+                        : Path.GetFileNameWithoutExtension(file);
+
+                Match typeMatch =
+                    Regex.Match(
+                        text,
+                        @"(?mi)^\s*propertytype\s+""([^""]+)""");
+
+                string propertyType =
+                    typeMatch.Success
+                        ? typeMatch.Groups[1].Value
+                        : string.Empty;
+
+                Match sourceMatch =
+                    Regex.Match(
+                        text,
+                        @"(?mi)^\s*(?:buildingfile|dungenblockfile|dungeonblockfile|treefile|effectfile|ambiencefile)\s+""([^""]+)""");
+
+                string sourcePath =
+                    sourceMatch.Success
+                        ? sourceMatch.Groups[1].Value
+                        : null;
+
+                var entry =
+                    new PropertyEntry
+                    {
+                        Id = id,
+                        PropertyName = propertyName,
+                        PropertyType = propertyType,
+                        SourcePath = sourcePath,
+                        SourcePropertyFile = file
+                    };
+
+                if (!result.TryGetValue(
+                        id,
+                        out PropertyEntry existing) ||
+                    PropertyScore(entry) >
+                    PropertyScore(existing))
+                {
+                    result[id] = entry;
                 }
             }
             catch (Exception ex)
             {
                 UnityEngine.Debug.LogWarning(
-                    $"CRC okunamadı: {file}\n{ex.Message}");
+                    $"Property okunamadı: {file}\n{ex.Message}");
             }
         }
+
+        UnityEngine.Debug.Log(
+            $"Pyungmoo Property index: {result.Count} ID");
 
         return result;
     }
 
-    private static IEnumerable<string> EnumerateObjectSourceFiles(
-        string zoneRoot,
-        string repoRoot)
+    private static int PropertyScore(
+        PropertyEntry entry)
     {
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        int score = 0;
 
-        foreach (string pattern in new[] { "*.gr2", "*.spt" })
+        string path =
+            entry.SourcePropertyFile
+                .Replace('\\', '/')
+                .ToLowerInvariant();
+
+        if (!string.IsNullOrEmpty(entry.SourcePath))
+            score += 100;
+
+        if (path.Contains("/property/c/"))
+            score += 30;
+
+        if (path.Contains("/property/b/"))
+            score += 20;
+
+        if (string.Equals(
+                entry.PropertyType,
+                "Building",
+                StringComparison.OrdinalIgnoreCase))
         {
-            foreach (string file in Directory.EnumerateFiles(
-                zoneRoot,
-                pattern,
-                SearchOption.AllDirectories))
-            {
-                if (seen.Add(Path.GetFullPath(file)))
-                    yield return file;
-            }
+            score += 10;
         }
 
-        // Fallback for unusual unpack layouts.
-        foreach (string pattern in new[] { "*.gr2", "*.spt" })
+        if (string.Equals(
+                entry.PropertyType,
+                "Tree",
+                StringComparison.OrdinalIgnoreCase))
         {
-            foreach (string file in Directory.EnumerateFiles(
-                repoRoot,
-                pattern,
-                SearchOption.AllDirectories))
+            score += 5;
+        }
+
+        return score;
+    }
+
+    private static Dictionary<string, string>
+        BuildSourceFileIndex(string repoRoot)
+    {
+        var result =
+            new Dictionary<string, string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        string[] extensions =
+        {
+            "*.gr2",
+            "*.spt",
+            "*.mse"
+        };
+
+        foreach (string extension in extensions)
+        {
+            IEnumerable<string> files;
+
+            try
             {
-                string normalized = file.Replace('\\', '/');
+                files = Directory.EnumerateFiles(
+                    repoRoot,
+                    extension,
+                    SearchOption.AllDirectories);
+            }
+            catch
+            {
+                continue;
+            }
+
+            foreach (string file in files)
+            {
+                string normalized =
+                    file.Replace('\\', '/');
 
                 if (normalized.IndexOf(
                         "/Unityxx/",
                         StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    continue;
+                }
+
+                string key =
+                    Path.GetFileNameWithoutExtension(file);
+
+                if (string.IsNullOrWhiteSpace(key))
                     continue;
 
-                if (seen.Add(Path.GetFullPath(file)))
-                    yield return file;
+                if (!result.ContainsKey(key))
+                    result.Add(key, file);
             }
         }
+
+        UnityEngine.Debug.Log(
+            $"Metin2 source model index: {result.Count} dosya");
+
+        return result;
     }
 
-    private static ConversionStats AutoConvertMissingGr2(
-        string noesisPath,
-        HashSet<string> neededNames,
-        IEnumerable<SourceObject> sourceObjects,
-        string repoRoot)
+    private static bool IsGeometryProperty(
+        PropertyEntry property)
+    {
+        if (property == null ||
+            string.IsNullOrWhiteSpace(property.SourcePath))
+        {
+            return false;
+        }
+
+        string source =
+            property.SourcePath.ToLowerInvariant();
+
+        return source.EndsWith(".gr2") ||
+               source.EndsWith(".spt");
+    }
+
+    private static ConversionStats
+        AutoConvertMissingModels(
+            string noesisPath,
+            HashSet<string> neededModels,
+            Dictionary<string, string> sourceByName)
     {
         string projectRoot =
             Directory.GetParent(Application.dataPath).FullName;
 
-        string outputRoot = Path.Combine(
-            projectRoot,
-            AutoModelFolder
-                .Substring("Assets/".Length)
-                .Replace('/', Path.DirectorySeparatorChar));
+        string outputRoot =
+            Path.Combine(
+                projectRoot,
+                AutoModelFolder
+                    .Substring("Assets/".Length)
+                    .Replace(
+                        '/',
+                        Path.DirectorySeparatorChar));
 
         Directory.CreateDirectory(outputRoot);
-
-        Dictionary<string, SourceObject> sourceByName =
-            new Dictionary<string, SourceObject>(
-                StringComparer.OrdinalIgnoreCase);
-
-        foreach (SourceObject source in sourceObjects)
-        {
-            if (!source.Path.EndsWith(
-                    ".gr2",
-                    StringComparison.OrdinalIgnoreCase))
-                continue;
-
-            string name = Path.GetFileNameWithoutExtension(source.Path);
-
-            if (!sourceByName.ContainsKey(name))
-                sourceByName.Add(name, source);
-        }
 
         HashSet<string> existingModels =
             AssetDatabase.FindAssets("t:Model")
                 .Select(AssetDatabase.GUIDToAssetPath)
                 .Select(Path.GetFileNameWithoutExtension)
                 .Where(n => !string.IsNullOrWhiteSpace(n))
-                .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                .ToHashSet(
+                    StringComparer.OrdinalIgnoreCase);
 
-        int converted = 0;
-        int alreadyExisting = 0;
-        int missingSource = 0;
-        int failed = 0;
+        var stats = new ConversionStats();
 
-        foreach (string modelName in neededNames.OrderBy(
+        foreach (string modelName in neededModels.OrderBy(
                      x => x,
                      StringComparer.OrdinalIgnoreCase))
         {
             if (existingModels.Contains(modelName) ||
                 existingModels.Contains(modelName + "out"))
             {
-                alreadyExisting++;
+                stats.AlreadyExisting++;
                 continue;
             }
 
             if (!sourceByName.TryGetValue(
                     modelName,
-                    out SourceObject source))
+                    out string sourceFile))
             {
-                missingSource++;
+                stats.MissingSource++;
                 continue;
             }
 
-            string outputFbx = Path.Combine(
-                outputRoot,
-                modelName + ".fbx");
+            string outputFbx =
+                Path.Combine(
+                    outputRoot,
+                    modelName + ".fbx");
 
             if (File.Exists(outputFbx))
             {
-                converted++;
+                stats.Converted++;
                 continue;
             }
 
             try
             {
-                // Required orientation correction:
-                // -rotate 90 0 0
+                // REQUIRED orientation correction.
                 string arguments =
-                    $"?cmode \"{source.Path}\" \"{outputFbx}\" " +
+                    $"?cmode ""{sourceFile}"" ""{outputFbx}"" " +
                     "-fbxmeshmerge -rotate 90 0 0";
 
                 UnityEngine.Debug.Log(
-                    $"Noesis GR2 -> FBX: {modelName}\n" +
-                    $"Source: {source.Path}\n" +
+                    $"Noesis GR2/SPT -> FBX: {modelName}\n" +
+                    $"Source: {sourceFile}\n" +
                     $"Args: {arguments}");
 
-                using (Process process = new Process())
+                using (Process process =
+                       new Process())
                 {
-                    process.StartInfo = new ProcessStartInfo
-                    {
-                        FileName = noesisPath,
-                        Arguments = arguments,
-                        WorkingDirectory = Path.GetDirectoryName(noesisPath),
-                        UseShellExecute = false,
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        RedirectStandardError = true
-                    };
+                    process.StartInfo =
+                        new ProcessStartInfo
+                        {
+                            FileName = noesisPath,
+                            Arguments = arguments,
+                            WorkingDirectory =
+                                Path.GetDirectoryName(
+                                    noesisPath),
+                            UseShellExecute = false,
+                            CreateNoWindow = true,
+                            RedirectStandardOutput = true,
+                            RedirectStandardError = true
+                        };
 
                     process.Start();
 
-                    if (!process.WaitForExit(NoesisTimeoutMs))
+                    if (!process.WaitForExit(
+                            NoesisTimeoutMs))
                     {
                         try { process.Kill(); }
                         catch { }
 
-                        failed++;
+                        stats.Failed++;
+
                         UnityEngine.Debug.LogWarning(
                             $"Noesis timeout: {modelName}");
+
                         continue;
                     }
 
-                    string stdout = process.StandardOutput.ReadToEnd();
-                    string stderr = process.StandardError.ReadToEnd();
+                    string stdout =
+                        process.StandardOutput.ReadToEnd();
+
+                    string stderr =
+                        process.StandardError.ReadToEnd();
 
                     if (process.ExitCode != 0 ||
                         !File.Exists(outputFbx))
                     {
-                        failed++;
+                        stats.Failed++;
 
                         UnityEngine.Debug.LogWarning(
                             $"Noesis başarısız: {modelName}\n" +
-                            $"ExitCode: {process.ExitCode}\n" +
+                            $"ExitCode={process.ExitCode}\n" +
                             $"STDOUT:\n{stdout}\n" +
                             $"STDERR:\n{stderr}");
 
@@ -586,61 +783,54 @@ public static class Metin2PyungmooObjectImporter
                     }
                 }
 
-                converted++;
+                stats.Converted++;
 
                 EditorUtility.DisplayProgressBar(
-                    "Pyungmoo GR2 -> FBX",
+                    "Pyungmoo modelleri",
                     modelName,
-                    converted /
-                    (float)Math.Max(1, neededNames.Count));
+                    stats.Converted /
+                    (float)Math.Max(
+                        1,
+                        neededModels.Count));
             }
             catch (Exception ex)
             {
-                failed++;
+                stats.Failed++;
 
                 UnityEngine.Debug.LogWarning(
-                    $"GR2 -> FBX exception: {modelName}\n{ex.Message}");
+                    $"GR2/SPT -> FBX exception: {modelName}\n" +
+                    ex.Message);
             }
         }
 
         EditorUtility.ClearProgressBar();
 
         UnityEngine.Debug.Log(
-            $"Pyungmoo auto-conversion: " +
-            $"new={converted}, existing={alreadyExisting}, " +
-            $"source-missing={missingSource}, failed={failed}");
+            $"Pyungmoo model conversion: " +
+            $"new={stats.Converted}, " +
+            $"existing={stats.AlreadyExisting}, " +
+            $"missingSource={stats.MissingSource}, " +
+            $"failed={stats.Failed}");
 
-        return new ConversionStats
-        {
-            Converted = converted,
-            AlreadyExisting = alreadyExisting,
-            MissingSource = missingSource,
-            Failed = failed
-        };
+        return stats;
     }
 
-    private static bool IsConvertible3DSource(SourceObject source)
-    {
-        return source.Path.EndsWith(
-                   ".gr2",
-                   StringComparison.OrdinalIgnoreCase) ||
-               source.Path.EndsWith(
-                   ".spt",
-                   StringComparison.OrdinalIgnoreCase);
-    }
-
-    private static Dictionary<string, GameObject> BuildModelIndex()
+    private static Dictionary<string, GameObject>
+        BuildModelIndex()
     {
         var result =
             new Dictionary<string, GameObject>(
                 StringComparer.OrdinalIgnoreCase);
 
-        foreach (string guid in AssetDatabase.FindAssets("t:Model"))
+        foreach (string guid in
+                 AssetDatabase.FindAssets("t:Model"))
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
+            string path =
+                AssetDatabase.GUIDToAssetPath(guid);
 
             GameObject model =
-                AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                AssetDatabase.LoadAssetAtPath<GameObject>(
+                    path);
 
             if (model == null)
                 continue;
@@ -651,13 +841,8 @@ public static class Metin2PyungmooObjectImporter
             if (string.IsNullOrWhiteSpace(name))
                 continue;
 
-            if (!result.ContainsKey(
-                    NormalizeKey(name)))
-            {
-                result.Add(
-                    NormalizeKey(name),
-                    model);
-            }
+            if (!result.ContainsKey(name))
+                result.Add(name, model);
         }
 
         UnityEngine.Debug.Log(
@@ -667,40 +852,54 @@ public static class Metin2PyungmooObjectImporter
     }
 
     private static bool TryFindModel(
-        Dictionary<string, GameObject> index,
-        string sourceModelName,
+        Dictionary<string, GameObject> modelIndex,
+        string modelName,
         out GameObject model)
     {
-        string key = NormalizeKey(sourceModelName);
-
-        if (index.TryGetValue(key, out model))
+        if (modelIndex.TryGetValue(
+                modelName,
+                out model))
+        {
             return true;
+        }
 
-        string outKey =
-            NormalizeKey(sourceModelName + "out");
-
-        if (index.TryGetValue(outKey, out model))
+        if (modelIndex.TryGetValue(
+                modelName + "out",
+                out model))
+        {
             return true;
+        }
 
         model = null;
         return false;
     }
 
-    private static List<AreaObject> ParseAreaData(string file)
+    private static List<AreaObject>
+        ParseAreaData(string file)
     {
-        var result = new List<AreaObject>();
-        string[] lines = File.ReadAllLines(file);
+        var result =
+            new List<AreaObject>();
 
-        for (int i = 0; i < lines.Length; i++)
+        string[] lines =
+            File.ReadAllLines(file);
+
+        for (int i = 0;
+             i < lines.Length;
+             i++)
         {
-            if (!lines[i].Trim().StartsWith(
+            string trimmed =
+                lines[i].Trim();
+
+            if (!trimmed.StartsWith(
                     "Start Object",
                     StringComparison.OrdinalIgnoreCase))
+            {
                 continue;
+            }
 
             Match objectMatch =
                 Regex.Match(
-                    lines[i].Trim(),
+                    trimmed,
                     @"Start Object(\d+)",
                     RegexOptions.IgnoreCase |
                     RegexOptions.CultureInvariant);
@@ -708,17 +907,23 @@ public static class Metin2PyungmooObjectImporter
             int objectIndex = result.Count;
 
             if (objectMatch.Success)
+            {
                 int.TryParse(
                     objectMatch.Groups[1].Value,
                     NumberStyles.Integer,
                     CultureInfo.InvariantCulture,
                     out objectIndex);
+            }
 
-            var data = new List<string>();
+            var data =
+                new List<string>();
 
-            for (int j = i + 1; j < lines.Length; j++)
+            for (int j = i + 1;
+                 j < lines.Length;
+                 j++)
             {
-                string line = lines[j].Trim();
+                string line =
+                    lines[j].Trim();
 
                 if (line.StartsWith(
                         "End Object",
@@ -735,8 +940,12 @@ public static class Metin2PyungmooObjectImporter
             if (data.Count < 4)
                 continue;
 
-            if (!TryParseVector3(data[0], out Vector3 position))
+            if (!TryParseVector3(
+                    data[0],
+                    out Vector3 position))
+            {
                 continue;
+            }
 
             if (!uint.TryParse(
                     data[1],
@@ -747,20 +956,20 @@ public static class Metin2PyungmooObjectImporter
                 continue;
             }
 
-            if (!TryParseVector3(
-                    data[2].Replace('#', ' '),
-                    out Vector3 rotation))
-            {
-                rotation = Vector3.zero;
-            }
+            Vector3 rotation =
+                Vector3.zero;
 
-            float offset = 0.0f;
+            TryParseVector3(
+                data[2].Replace('#', ' '),
+                out rotation);
+
+            float heightOffset = 0.0f;
 
             float.TryParse(
                 data[3],
                 NumberStyles.Float,
                 CultureInfo.InvariantCulture,
-                out offset);
+                out heightOffset);
 
             result.Add(
                 new AreaObject
@@ -769,7 +978,7 @@ public static class Metin2PyungmooObjectImporter
                     PropertyId = propertyId,
                     Position = position,
                     Rotation = rotation,
-                    HeightOffset = offset
+                    HeightOffset = heightOffset
                 });
         }
 
@@ -780,9 +989,10 @@ public static class Metin2PyungmooObjectImporter
         string value,
         out Vector3 result)
     {
-        string[] parts = value.Split(
-            new[] { ' ', '\t', '#' },
-            StringSplitOptions.RemoveEmptyEntries);
+        string[] parts =
+            value.Split(
+                new[] { ' ', '\t', '#' },
+                StringSplitOptions.RemoveEmptyEntries);
 
         if (parts.Length < 3)
         {
@@ -824,37 +1034,32 @@ public static class Metin2PyungmooObjectImporter
         return true;
     }
 
-    private static Vector3 ConvertPosition(Vector3 source)
+    private static Quaternion ConvertRotation(
+        Vector3 sourceRotation)
     {
-        return new Vector3(
-            source.x * CoordinateScale,
-            source.z * CoordinateScale,
-            -source.y * CoordinateScale);
-    }
-
-    private static Quaternion ConvertRotation(Vector3 source)
-    {
-        // AreaData is Z-up; Unity is Y-up.
-        Quaternion sourceBasis =
+        // The AreaData rotation is expressed in the source
+        // coordinate basis. Preserve all three angles while
+        // changing the up-axis to Unity.
+        Quaternion basis =
             Quaternion.Euler(-90.0f, 0.0f, 0.0f);
 
-        Quaternion sourceRotation =
+        Quaternion source =
             Quaternion.Euler(
-                source.x,
-                source.y,
-                source.z);
+                sourceRotation.x,
+                sourceRotation.y,
+                sourceRotation.z);
 
-        return sourceBasis *
-               sourceRotation *
-               Quaternion.Inverse(sourceBasis);
+        return basis *
+               source *
+               Quaternion.Inverse(basis);
     }
 
-    private static bool AddMeshColliders(GameObject root)
+    private static void AddMeshColliders(
+        GameObject root)
     {
-        int added = 0;
-
         foreach (MeshFilter filter in
-                 root.GetComponentsInChildren<MeshFilter>(true))
+                 root.GetComponentsInChildren<MeshFilter>(
+                     true))
         {
             if (filter.sharedMesh == null)
                 continue;
@@ -865,79 +1070,48 @@ public static class Metin2PyungmooObjectImporter
             MeshCollider collider =
                 filter.gameObject.AddComponent<MeshCollider>();
 
-            collider.sharedMesh = filter.sharedMesh;
+            collider.sharedMesh =
+                filter.sharedMesh;
+
             collider.convex = false;
-            added++;
         }
-
-        return added > 0;
     }
 
-    private static uint ComputeCrc32(string file)
-    {
-        const uint polynomial = 0xEDB88320u;
-        uint crc = 0xFFFFFFFFu;
-
-        using (FileStream stream =
-               new FileStream(
-                   file,
-                   FileMode.Open,
-                   FileAccess.Read,
-                   FileShare.Read))
-        {
-            byte[] buffer = new byte[1024 * 1024];
-            int read;
-
-            while ((read = stream.Read(buffer, 0, buffer.Length)) > 0)
-            {
-                for (int i = 0; i < read; i++)
-                {
-                    crc ^= buffer[i];
-
-                    for (int bit = 0; bit < 8; bit++)
-                    {
-                        if ((crc & 1u) != 0)
-                            crc = (crc >> 1) ^ polynomial;
-                        else
-                            crc >>= 1;
-                    }
-                }
-            }
-        }
-
-        return crc ^ 0xFFFFFFFFu;
-    }
-
-    private static string FindNoesis(string repoRoot)
+    private static string FindNoesis(
+        string repoRoot)
     {
         string userProfile =
             Environment.GetFolderPath(
                 Environment.SpecialFolder.UserProfile);
 
         string oneDrive =
-            Environment.GetEnvironmentVariable("OneDrive");
+            Environment.GetEnvironmentVariable(
+                "OneDrive");
 
-        var candidates = new List<string>
-        {
-            Path.Combine(
-                repoRoot,
-                "shared_3d_exporting",
-                "noesis",
-                "noesis",
-                "Noesis.exe"),
-            Path.Combine(
-                Directory.GetParent(repoRoot).FullName,
-                "shared_3d_exporting",
-                "noesis",
-                "noesis",
-                "Noesis.exe"),
-            Path.Combine(
-                userProfile,
-                "shared_3d_exporting",
-                "noesis",
-                "noesis",
-                "Noesis.exe")
-        };
+        var candidates =
+            new List<string>
+            {
+                Path.Combine(
+                    repoRoot,
+                    "shared_3d_exporting",
+                    "noesis",
+                    "noesis",
+                    "Noesis.exe"),
+
+                Path.Combine(
+                    Directory.GetParent(repoRoot).FullName,
+                    "shared_3d_exporting",
+                    "noesis",
+                    "noesis",
+                    "Noesis.exe"),
+
+                Path.Combine(
+                    userProfile,
+                    "shared_3d_exporting",
+                    "noesis",
+                    "noesis",
+                    "Noesis.exe")
+            };
 
         if (!string.IsNullOrEmpty(oneDrive))
         {
@@ -966,44 +1140,41 @@ public static class Metin2PyungmooObjectImporter
                 return candidate;
         }
 
-        string workspaceParent =
+        string parent =
             Directory.GetParent(repoRoot)?.FullName;
 
-        if (!string.IsNullOrEmpty(workspaceParent))
+        if (!string.IsNullOrEmpty(parent))
         {
             try
             {
-                string found =
-                    Directory.EnumerateFiles(
-                        workspaceParent,
+                return Directory.EnumerateFiles(
+                        parent,
                         "Noesis.exe",
                         SearchOption.AllDirectories)
                     .FirstOrDefault();
-
-                if (!string.IsNullOrEmpty(found))
-                    return found;
             }
-            catch (Exception ex)
+            catch
             {
-                UnityEngine.Debug.LogWarning(
-                    "Noesis araması başarısız: " + ex.Message);
             }
         }
 
         return null;
     }
 
-    private static void DeleteExistingObjectRoot(GameObject mapRoot)
+    private static void DeleteExistingObjectRoot(
+        GameObject mapRoot)
     {
-        Transform oldRoot =
-            mapRoot.transform.Find(ObjectRootName);
+        Transform old =
+            mapRoot.transform.Find(
+                ObjectRootName);
 
-        if (oldRoot != null)
+        if (old != null)
             UnityEngine.Object.DestroyImmediate(
-                oldRoot.gameObject);
+                old.gameObject);
     }
 
-    private static void WriteReport(string text)
+    private static void WriteReport(
+        string text)
     {
         string projectRoot =
             Directory.GetParent(Application.dataPath).FullName;
@@ -1011,14 +1182,17 @@ public static class Metin2PyungmooObjectImporter
         string absolute =
             Path.Combine(
                 projectRoot,
-                ReportPath.Substring("Assets/".Length)
-                    .Replace('/', Path.DirectorySeparatorChar));
+                ReportPath
+                    .Substring("Assets/".Length)
+                    .Replace(
+                        '/',
+                        Path.DirectorySeparatorChar));
 
-        string directory =
+        string dir =
             Path.GetDirectoryName(absolute);
 
-        if (!string.IsNullOrEmpty(directory))
-            Directory.CreateDirectory(directory);
+        if (!string.IsNullOrEmpty(dir))
+            Directory.CreateDirectory(dir);
 
         File.WriteAllText(
             absolute,
@@ -1030,35 +1204,39 @@ public static class Metin2PyungmooObjectImporter
             ImportAssetOptions.ForceUpdate);
     }
 
-    private static string NormalizeKey(string value)
-    {
-        return (value ?? string.Empty)
-            .Trim()
-            .Replace('\\', '/')
-            .Split('/')
-            .Last()
-            .ToLowerInvariant();
-    }
-
     private static void Increment<TKey>(
         Dictionary<TKey, int> dictionary,
         TKey key)
     {
-        if (dictionary.TryGetValue(key, out int count))
+        if (dictionary.TryGetValue(
+                key,
+                out int count))
+        {
             dictionary[key] = count + 1;
+        }
         else
+        {
             dictionary[key] = 1;
+        }
     }
 
-    private static string Sanitize(string value)
+    private static string Sanitize(
+        string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return "Object";
 
-        foreach (char c in Path.GetInvalidFileNameChars())
-            value = value.Replace(c, '_');
+        foreach (char c in
+                 Path.GetInvalidFileNameChars())
+        {
+            value = value.Replace(
+                c,
+                '_');
+        }
 
-        return value.Replace(' ', '_');
+        return value.Replace(
+            ' ',
+            '_');
     }
 
     private sealed class AreaObject
@@ -1070,10 +1248,13 @@ public static class Metin2PyungmooObjectImporter
         public float HeightOffset;
     }
 
-    private sealed class SourceObject
+    private sealed class PropertyEntry
     {
-        public uint Crc;
-        public string Path;
+        public uint Id;
+        public string PropertyName;
+        public string PropertyType;
+        public string SourcePath;
+        public string SourcePropertyFile;
     }
 
     private sealed class ConversionStats
