@@ -101,6 +101,8 @@ public static class Metin2PyungmooFinalImporter
         if (mapRoot == null)
             throw new InvalidOperationException("Pyungmoo GameObject'i bulunamadı.");
 
+        ValidateBuildSettings();
+
         string repoRoot = GetRepoRoot();
         string mapSource = FindDirectoryOrThrow(
             repoRoot,
@@ -424,6 +426,7 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("  AreaData objects: " + areaObjects.Count);
         report.AppendLine("  Unique AreaData IDs: " +
             areaObjects.Select(x => x.PropertyId).Distinct().Count());
+        report.AppendLine("  Pyungmoo Build Settings: enabled");
         report.AppendLine("  Building Property records indexed: " +
             buildingProperties.Count);
         report.AppendLine("  AreaData -> Building references: " +
@@ -474,6 +477,40 @@ public static class Metin2PyungmooFinalImporter
             "Map NPC instance: " + npcPlaced + "\n" +
             "Placeholder: 0\n\n" +
             "PASS - save/reload verify OK - report: " + ReportPath;
+    }
+
+    private static void ValidateBuildSettings()
+    {
+        EditorBuildSettingsScene[] scenes =
+            EditorBuildSettings.scenes ?? Array.Empty<EditorBuildSettingsScene>();
+
+        string expectedGuid =
+            AssetDatabase.AssetPathToGUID(ScenePath);
+
+        EditorBuildSettingsScene pyungmoo = scenes.FirstOrDefault(
+            x => string.Equals(
+                x.path,
+                ScenePath,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (pyungmoo == null)
+            throw new InvalidOperationException(
+                "Pyungmoo.unity Build Settings listesinde yok.");
+
+        if (!pyungmoo.enabled)
+            throw new InvalidOperationException(
+                "Pyungmoo.unity Build Settings içinde devre dışı.");
+
+        if (!string.IsNullOrEmpty(expectedGuid) &&
+            !string.IsNullOrEmpty(pyungmoo.guid) &&
+            !string.Equals(
+                expectedGuid,
+                pyungmoo.guid,
+                StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException(
+                "Pyungmoo Build Settings GUID uyuşmazlığı.");
+        }
     }
 
     private static Scene OpenScene()
