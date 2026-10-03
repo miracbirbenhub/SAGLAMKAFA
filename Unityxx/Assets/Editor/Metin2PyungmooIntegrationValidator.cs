@@ -70,6 +70,7 @@ public static class Metin2PyungmooIntegrationValidator
             ValidateC1BuildingSourceCoverage(result);
             ValidateBuildingAssetsAndGallery(result, mapRoot.transform);
             ValidateDirectBuildingInstances(result, mapRoot.transform);
+            ValidateDirectBuildingReport(result);
             ValidateNpcAssetsAndScene(result, mapRoot.transform);
             ValidateMapObjects(result, mapRoot.transform);
 
@@ -504,6 +505,78 @@ public static class Metin2PyungmooIntegrationValidator
         result.Check(
             invalid == 0,
             "Gerçek Building instance'ların tamamında Renderer var.");
+    }
+
+    private static void ValidateDirectBuildingReport(
+        ValidationResult result)
+    {
+        string reportPath = Path.Combine(
+            Application.dataPath,
+            "Metin2Generated",
+            "Pyungmoo",
+            "PyungmooDirectBuildingReport.txt");
+
+        if (!File.Exists(reportPath))
+        {
+            result.Fail(
+                "Direct Building importer raporu bulunamadı: " +
+                reportPath);
+            return;
+        }
+
+        string report = File.ReadAllText(reportPath);
+
+        int matches = ParseReportInt(
+            report,
+            "AreaData -> Building eşleşmesi:");
+
+        int placed = ParseReportInt(
+            report,
+            "Haritaya yerleştirilen gerçek Building instance:");
+
+        int missingModel = ParseReportInt(
+            report,
+            "Eksik Building FBX:");
+
+        result.AddMetric(
+            "Direct report building matches",
+            matches);
+
+        result.AddMetric(
+            "Direct report placed buildings",
+            placed);
+
+        result.AddMetric(
+            "Direct report missing Building FBX",
+            missingModel);
+
+        result.Check(
+            matches == placed,
+            $"Direct importer eşleşme ve placement sayısı aynı ({matches}/{placed}).");
+
+        result.Check(
+            missingModel == 0,
+            "Eşleşmiş hiçbir AreaData Building referansında FBX eksik değil.");
+    }
+
+    private static int ParseReportInt(
+        string report,
+        string label)
+    {
+        Match match = Regex.Match(
+            report ?? string.Empty,
+            "^\\s*" +
+            Regex.Escape(label) +
+            "\\s*(?:=|:)?" +
+            "\\s*(\\d+)",
+            RegexOptions.Multiline |
+            RegexOptions.CultureInvariant);
+
+        return match.Success
+            ? int.Parse(
+                match.Groups[1].Value,
+                System.Globalization.CultureInfo.InvariantCulture)
+            : -1;
     }
 
     private static void ValidateNpcAssetsAndScene(
