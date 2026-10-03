@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -22,6 +23,8 @@ public static class Metin2PyungmooObjectImporter
     private const float ObjectXYScale = 0.02f;
     private const float ObjectZScale = 0.005f;
     private const bool AddMeshColliders = true;
+    private const string AutoModelFolder = "Assets/Metin2Generated/Pyungmoo/AutoModels";
+    private const int NoesisTimeoutMs = 120000;
 
     [MenuItem("Metin2/Pyungmoo/Import Map Objects")]
     public static void ImportMapObjects()
@@ -54,6 +57,46 @@ public static class Metin2PyungmooObjectImporter
                 throw new DirectoryNotFoundException("Property klasörü bulunamadı:\n" + propertyRoot);
 
             Dictionary<uint, PropertyEntry> propertyById = LoadProperties(propertyRoot);
+
+            // First read the map objects that actually occur in C1 so we know
+            // which models are needed. Existing FBXs are reused; missing GR2s
+            // are converted automatically through Noesis.
+            List<AreaObject> allAreaObjects = new List<AreaObject>();
+            List<string> areaFiles = new List<string>();
+
+            foreach (string chunkDir in DiscoverChunkDirectories(mapRootPath))
+            {
+                string areaFile = Path.Combine(chunkDir, "areadata.txt");
+                if (!File.Exists(areaFile))
+                    continue;
+
+                areaFiles.Add(areaFile);
+                allAreaObjects.AddRange(ParseAreaData(areaFile));
+            }
+
+            string noesisPath = FindNoesis(repoRoot);
+            if (!string.IsNullOrEmpty(noesisPath))
+            {
+                HashSet<string> neededModelNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                foreach (AreaObject areaObject in allAreaObjects)
+                {
+                    if (propertyById.TryGetValue(areaObject.PropertyId, out PropertyEntry property) &&
+                        !string.IsNullOrWhiteSpace(property.ModelKey))
+                    {
+                        neededModelNames.Add(property.ModelKey);
+                    }
+                }
+
+                AutoConvertMissingModels(repoRoot, noesisPath, neededModelNames);
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning(
+                    "Noesis.exe bulunamadı. Mevcut FBX modelleri kullanılacak; eksik GR2 modelleri dönüştürülmeyecek.");
+            }
+
+            AssetDatabase.Refresh();
             Dictionary<string, GameObject> modelByName = BuildModelIndex();
 
             var report = new StringBuilder();
@@ -71,13 +114,9 @@ public static class Metin2PyungmooObjectImporter
             var missingPropertyIds = new Dictionary<uint, int>();
             var missingModelNames = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (string chunkDir in DiscoverChunkDirectories(mapRootPath))
+            foreach (string areaFile in areaFiles)
             {
-                string areaFile = Path.Combine(chunkDir, "areadata.txt");
-                if (!File.Exists(areaFile))
-                    continue;
-
-                string chunkName = Path.GetFileName(chunkDir);
+                string chunkName = Path.GetFileName(Path.GetDirectoryName(areaFile));
                 Transform chunkRoot = new GameObject("Objects_" + chunkName).transform;
                 chunkRoot.SetParent(objectRoot, false);
 
@@ -138,6 +177,7 @@ public static class Metin2PyungmooObjectImporter
             report.AppendLine($"Eksik Property: {missingProperty}");
             report.AppendLine($"Eksik FBX/model: {missingModel}");
             report.AppendLine($"Eklenen MeshCollider: {colliderCount}");
+            report.AppendLine($"Noesis: {(string.IsNullOrEmpty(noesisPath) ? "bulunamadı" : noesisPath)}");
             report.AppendLine();
 
             if (missingPropertyIds.Count > 0)
@@ -500,6 +540,165 @@ public static class Metin2PyungmooObjectImporter
         }
 
         return added;
+    }
+
+    private static string FindNoesis(string repoRoot)
+    {
+        string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        string oneDrive = Environment.GetEnvironmentVariable("OneDrive");
+
+        var candidates = new List<string>
+        {
+            Path.Combine(repoRoot, "shared_3d_exporting", "noesis", "noesis", "Noesis.exe"),
+            Path.Combine(Directory.GetParent(repoRoot).FullName, "shared_3d_exporting", "noesis", "noesis", "Noesis.exe"),
+            Path.Combine(userProfile, "shared_3d_exporting", "noesis", "noesis", "Noesis.exe"),
+            Path.Combine(userProfile, "Desktop", "shared_3d_exporting", "noesis", "noesis", "Noesis.exe")
+        };
+
+        if (!string.IsNullOrEmpty(oneDrive))
+        {
+            candidates.Add(Path.Combine(oneDrive, "Desktop", "shared_3d_exporting", "noesis", "noesis", "Noesis.exe"));
+            candidates.Add(Path.Combine(oneDrive, "Masaüstü", "shared_3d_exporting", "noesis", "noesis", "Noesis.exe"));
+        }
+
+        foreach (string candidate in candidates)
+        {
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        // Last targeted fallback: search only the workspace parent tree.
+        string workspaceParent = Directory.GetParent(repoRoot).FullName;
+        try
+        {
+            string found = Directory
+                .EnumerateFiles(workspaceParent, "Noesis.exe", SearchOption.AllDirectories)
+                .FirstOrDefault();
+            if (!string.IsNullOrEmpty(found))
+                return found;
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning("Noesis araması tamamlanamadı: " + ex.Message);
+        }
+
+        return null;
+    }
+
+    private static void AutoConvertMissingModels(
+        string repoRoot,
+        string noesisPath,
+        HashSet<string> neededModelNames)
+    {
+        string zoneRoot = Path.Combine(repoRoot, "Metin2Client", "Zone");
+        if (!Directory.Exists(zoneRoot))
+        {
+            UnityEngine.Debug.LogWarning("GR2 kaynak klasörü bulunamadı: " + zoneRoot);
+            return;
+        }
+
+        Directory.CreateDirectory(Path.Combine(
+            Directory.GetParent(Application.dataPath).FullName,
+            AutoModelFolder.Substring("Assets/".Length)));
+
+        string absoluteOutputRoot = Path.Combine(
+            Directory.GetParent(Application.dataPath).FullName,
+            AutoModelFolder.Substring("Assets/".Length).Replace('/', Path.DirectorySeparatorChar));
+
+        var existingFbxNames = new HashSet<string>(
+            AssetDatabase.FindAssets("t:Model")
+                .Select(g => Path.GetFileNameWithoutExtension(AssetDatabase.GUIDToAssetPath(g)))
+                .Where(n => !string.IsNullOrWhiteSpace(n)),
+            StringComparer.OrdinalIgnoreCase);
+
+        var gr2ByName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string gr2 in Directory.EnumerateFiles(zoneRoot, "*.gr2", SearchOption.AllDirectories))
+        {
+            string key = Path.GetFileNameWithoutExtension(gr2);
+            if (!gr2ByName.ContainsKey(key))
+                gr2ByName.Add(key, gr2);
+        }
+
+        int converted = 0;
+        int alreadyExisting = 0;
+        int sourceMissing = 0;
+
+        foreach (string modelName in neededModelNames.OrderBy(x => x, StringComparer.OrdinalIgnoreCase))
+        {
+            if (existingFbxNames.Contains(modelName) ||
+                existingFbxNames.Contains(modelName + "out"))
+            {
+                alreadyExisting++;
+                continue;
+            }
+
+            if (!gr2ByName.TryGetValue(modelName, out string inputGr2))
+            {
+                sourceMissing++;
+                continue;
+            }
+
+            string outputFbx = Path.Combine(absoluteOutputRoot, modelName + ".fbx");
+
+            if (File.Exists(outputFbx))
+                continue;
+
+            try
+            {
+                string arguments =
+                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -notex";
+
+                using (var process = new Process())
+                {
+                    process.StartInfo = new ProcessStartInfo
+                    {
+                        FileName = noesisPath,
+                        Arguments = arguments,
+                        WorkingDirectory = Path.GetDirectoryName(noesisPath),
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+
+                    process.Start();
+
+                    if (!process.WaitForExit(NoesisTimeoutMs))
+                    {
+                        try { process.Kill(); } catch { }
+                        UnityEngine.Debug.LogWarning(
+                            $"Noesis zaman aşımı: {modelName}");
+                        continue;
+                    }
+
+                    if (process.ExitCode != 0 || !File.Exists(outputFbx))
+                    {
+                        string stderr = process.StandardError.ReadToEnd();
+                        UnityEngine.Debug.LogWarning(
+                            $"Noesis dönüştürme başarısız: {modelName}\\n{stderr}");
+                        continue;
+                    }
+                }
+
+                converted++;
+                EditorUtility.DisplayProgressBar(
+                    "Pyungmoo model aktarımı",
+                    modelName,
+                    converted / (float)Math.Max(1, neededModelNames.Count));
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"GR2 -> FBX hatası: {modelName}\\n{ex.Message}");
+            }
+        }
+
+        EditorUtility.ClearProgressBar();
+
+        UnityEngine.Debug.Log(
+            $"Pyungmoo otomatik model aktarımı: " +
+            $"yeni={converted}, mevcut={alreadyExisting}, kaynak-yok={sourceMissing}");
     }
 
     private static void WriteReport(string text)
