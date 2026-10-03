@@ -423,80 +423,152 @@ public static class Metin2PyungmooDirectBuildingImporter
             new Dictionary<string, GameObject>(
                 StringComparer.OrdinalIgnoreCase);
 
-        // Do not derive the Unity project path from the repository location.
-        // AssetDatabase is the authoritative source for what is actually inside
-        // this Unity project's Assets folder.
-        AssetDatabase.Refresh();
+        AssetDatabase.Refresh(ImportAssetOptions.ForceUpdate);
 
-        string[] guids =
-            AssetDatabase.FindAssets(
-                "t:Model",
-                new[] { BuildingFolder });
+        // Search the active Unity project's Assets folder directly.
+        // This does not depend on where the Git repository itself is located.
+        string assetsRoot = Application.dataPath;
 
-        int foundAssets = guids.Length;
-
-        foreach (string guid in guids)
+        string[] absoluteFolders =
         {
-            string assetPath =
-                AssetDatabase.GUIDToAssetPath(guid);
+            Path.Combine(assetsRoot, "Metin2Imported", "Building"),
+            Path.Combine(assetsRoot, "Metin2Imported", "Buildings")
+        };
 
-            if (!assetPath.EndsWith(
-                    ".fbx",
-                    StringComparison.OrdinalIgnoreCase))
+        int physicalFbxCount = 0;
+
+        foreach (string absoluteFolder in absoluteFolders)
+        {
+            if (!Directory.Exists(absoluteFolder))
                 continue;
 
-            GameObject prefab = null;
+            string[] files = Directory.GetFiles(
+                absoluteFolder,
+                "*.fbx",
+                SearchOption.AllDirectories);
 
+            physicalFbxCount += files.Length;
+
+            foreach (string file in files)
+            {
+                string relativeToAssets =
+                    Path.GetRelativePath(
+                        assetsRoot,
+                        file)
+                    .Replace('\\', '/');
+
+                string assetPath =
+                    "Assets/" + relativeToAssets;
+
+                TryAddFbxAsset(result, assetPath);
+            }
+        }
+
+        // Also ask Unity which Model assets exist in the intended folders.
+        foreach (string folder in new[]
+                 {
+                     "Assets/Metin2Imported/Building",
+                     "Assets/Metin2Imported/Buildings"
+                 })
+        {
+            string[] guids;
             try
             {
-                AssetDatabase.ImportAsset(
-                    assetPath,
-                    ImportAssetOptions.ForceSynchronousImport);
+                guids = AssetDatabase.FindAssets(
+                    "t:Model",
+                    new[] { folder });
+            }
+            catch
+            {
+                guids = Array.Empty<string>();
+            }
 
-                prefab =
-                    AssetDatabase.LoadAssetAtPath<GameObject>(
-                        assetPath);
+            foreach (string guid in guids)
+            {
+                string assetPath =
+                    AssetDatabase.GUIDToAssetPath(guid);
 
-                if (prefab == null)
+                if (assetPath.EndsWith(
+                        ".fbx",
+                        StringComparison.OrdinalIgnoreCase))
                 {
-                    prefab =
-                        AssetDatabase.LoadAllAssetsAtPath(assetPath)
-                            .OfType<GameObject>()
-                            .FirstOrDefault();
+                    TryAddFbxAsset(result, assetPath);
                 }
             }
-            catch (Exception ex)
-            {
-                UnityEngine.Debug.LogWarning(
-                    $"FBX import/load hatası: {assetPath}\n{ex.Message}");
-            }
-
-            if (prefab == null)
-            {
-                UnityEngine.Debug.LogWarning(
-                    $"FBX AssetDatabase'de var ama GameObject olarak yüklenemedi: {assetPath}");
-                continue;
-            }
-
-            string fileName =
-                Path.GetFileNameWithoutExtension(assetPath);
-
-            AddModelAlias(result, fileName, prefab, false);
-            AddModelAlias(
-                result,
-                NormalizeModelKey(fileName),
-                prefab,
-                fileName.IndexOf(
-                    "_lod_",
-                    StringComparison.OrdinalIgnoreCase) >= 0);
         }
 
         UnityEngine.Debug.Log(
-            $"Direct Building FBX AssetDatabase discovery: " +
-            $"foundAssets={foundAssets}, usableFBX={result.Count}, " +
-            $"folder={BuildingFolder}");
+            $"Direct Building FBX discovery: " +
+            $"physicalFBX={physicalFbxCount}, " +
+            $"usableAliases={result.Count}, " +
+            $"Assets={assetsRoot}");
 
         return result;
+    }
+
+    private static void TryAddFbxAsset(
+        Dictionary<string, GameObject> result,
+        string assetPath)
+    {
+        if (string.IsNullOrWhiteSpace(assetPath) ||
+            !assetPath.EndsWith(
+                ".fbx",
+                StringComparison.OrdinalIgnoreCase))
+            return;
+
+        GameObject prefab = null;
+
+        try
+        {
+            AssetDatabase.ImportAsset(
+                assetPath,
+                ImportAssetOptions.ForceSynchronousImport |
+                ImportAssetOptions.ForceUpdate);
+
+            prefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(
+                    assetPath);
+
+            if (prefab == null)
+            {
+                prefab =
+                    AssetDatabase.LoadAllAssetsAtPath(assetPath)
+                        .OfType<GameObject>()
+                        .FirstOrDefault();
+            }
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning(
+                $"FBX import/load hatası: {assetPath}\n{ex.Message}");
+            return;
+        }
+
+        if (prefab == null)
+        {
+            UnityEngine.Debug.LogWarning(
+                $"FBX dosyası mevcut fakat Unity GameObject çıkaramadı: {assetPath}");
+            return;
+        }
+
+        string fileName =
+            Path.GetFileNameWithoutExtension(assetPath);
+
+        AddModelAlias(
+            result,
+            fileName,
+            prefab,
+            fileName.IndexOf(
+                "_lod_",
+                StringComparison.OrdinalIgnoreCase) >= 0);
+
+        AddModelAlias(
+            result,
+            NormalizeModelKey(fileName),
+            prefab,
+            fileName.IndexOf(
+                "_lod_",
+                StringComparison.OrdinalIgnoreCase) >= 0);
     }
     private static void AddModelAlias(
         Dictionary<string, GameObject> result,
