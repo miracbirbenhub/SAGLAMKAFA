@@ -97,7 +97,7 @@ public static class Metin2PyungmooNpcImporter
             npcRoot.SetParent(mapRoot.transform, false);
 
             int loadedModels = 0;
-            int placeholders = 0;
+            const int placeholders = 0;
             int groundMisses = 0;
 
             foreach (NpcPlacement placement in Placements)
@@ -112,18 +112,16 @@ public static class Metin2PyungmooNpcImporter
                 }
 
                 GameObject instance = LoadModelPrefab(placement.ModelKey);
-                bool isPlaceholder = instance == null;
 
-                if (isPlaceholder)
+                if (instance == null)
                 {
-                    instance = CreatePlaceholder(placement);
-                    placeholders++;
+                    throw new InvalidOperationException(
+                        $"NPC modeli bulunamadı: VNUM={placement.Vnum}, model={placement.ModelKey}");
                 }
-                else
-                {
-                    instance.name = $"NPC_{placement.Vnum}_{Sanitize(placement.DisplayName)}";
-                    loadedModels++;
-                }
+
+                instance.name =
+                    $"NPC_{placement.Vnum}_{Sanitize(placement.DisplayName)}";
+                loadedModels++;
 
                 instance.transform.SetParent(npcRoot, true);
                 instance.transform.position = position;
@@ -138,7 +136,7 @@ public static class Metin2PyungmooNpcImporter
                     placement.DisplayName,
                     new Vector2Int(placement.MapX, placement.MapY));
 
-                MarkPlaceholder(instance, isPlaceholder);
+                // Strict mode: missing NPC models are fatal; placeholders are never accepted.
             }
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -154,7 +152,7 @@ public static class Metin2PyungmooNpcImporter
                 $"Model bulundu: {loadedModels}\n" +
                 $"Yer tutucu: {placeholders}\n" +
                 $"Zemin raycast bulunamadı: {groundMisses}\n\n" +
-                "Eksik modeller şimdilik yer tutucu olarak gösterildi.",
+                "Strict mode: eksik NPC modeli varsa import işlemi başarısız olur.",
                 "Tamam");
         }
         catch (Exception ex)
@@ -226,47 +224,6 @@ public static class Metin2PyungmooNpcImporter
         }
 
         return null;
-    }
-
-    private static GameObject CreatePlaceholder(NpcPlacement placement)
-    {
-        GameObject go = GameObject.CreatePrimitive(
-            placement.ModelKey == "UNVERIFIED"
-                ? PrimitiveType.Capsule
-                : PrimitiveType.Cylinder);
-
-        go.name = $"NPC_PLACEHOLDER_{placement.Vnum}_{Sanitize(placement.DisplayName)}";
-        go.transform.localScale = new Vector3(0.8f, 1.0f, 0.8f);
-
-        Collider collider = go.GetComponent<Collider>();
-        if (collider != null)
-            UnityEngine.Object.DestroyImmediate(collider);
-
-        return go;
-    }
-
-    private static void MarkPlaceholder(GameObject go, bool placeholder)
-    {
-        if (!placeholder)
-            return;
-
-        MeshRenderer renderer = go.GetComponentInChildren<MeshRenderer>();
-        if (renderer == null)
-            return;
-
-        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
-        if (shader == null)
-            shader = Shader.Find("Standard");
-
-        if (shader == null)
-            return;
-
-        Material material = new Material(shader)
-        {
-            name = "Pyungmoo_NpcPlaceholder"
-        };
-        material.color = new Color(1.0f, 0.65f, 0.1f);
-        renderer.sharedMaterial = material;
     }
 
     private static string Sanitize(string name)
