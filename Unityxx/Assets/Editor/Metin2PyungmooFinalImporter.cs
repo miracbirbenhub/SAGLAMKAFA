@@ -71,7 +71,7 @@ public static class Metin2PyungmooFinalImporter
         new(20349, "Seyis", "jinno_patrol_spear", 396, 735, 2)
     };
 
-    [MenuItem("Metin2/Pyungmoo/FINAL - ALL Buildings + ALL NPCs + VERIFY")]
+    [MenuItem("Metin2/Pyungmoo/FINAL - ALL Imported Buildings + ALL Imported NPC FBX + VERIFY")]
     public static void ImportFinal()
     {
         string report = string.Empty;
@@ -483,7 +483,7 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("  " + standaloneValidation.Message.Replace("\n", "\n  "));
         report.AppendLine();
         report.AppendLine(
-            "All 47 Building FBX assets and all 22 NPC FBX assets are serialized into the Pyungmoo scene.");
+            "All 47 Building FBX assets and all 22 currently imported NPC FBX assets are serialized into the Pyungmoo scene.");
         report.AppendLine(
             "LOD Building FBXs are included in an inactive library so they are in the build without duplicating gameplay geometry.");
         report.AppendLine(
