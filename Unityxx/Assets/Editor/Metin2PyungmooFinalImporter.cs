@@ -428,6 +428,16 @@ public static class Metin2PyungmooFinalImporter
                 persistedValidation);
         }
 
+        BuildValidationResult standaloneValidation =
+            RunStandaloneWindowsBuildValidation();
+
+        if (!standaloneValidation.Passed)
+        {
+            throw new InvalidOperationException(
+                "StandaloneWindows64 build doğrulaması başarısız:\n" +
+                standaloneValidation.Message);
+        }
+
         StringBuilder report = new StringBuilder();
         report.AppendLine("PYUNGMOO FINAL IMPORT / VERIFY");
         report.AppendLine(DateTime.Now.ToString(
@@ -468,6 +478,9 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("  Pre-save: " + validation.Replace("\n", "\n  "));
         report.AppendLine("  Post-save/reload: " + persistedValidation.Replace("\n", "\n  "));
         report.AppendLine();
+        report.AppendLine("STANDALONE BUILD");
+        report.AppendLine("  " + standaloneValidation.Message.Replace("\n", "\n  "));
+        report.AppendLine();
         report.AppendLine(
             "All 47 Building FBX assets and all 22 NPC FBX assets are serialized into the Pyungmoo scene.");
         report.AppendLine(
@@ -491,6 +504,125 @@ public static class Metin2PyungmooFinalImporter
             "Map NPC instance: " + npcPlaced + "\n" +
             "Placeholder: 0\n\n" +
             "PASS - save/reload verify OK - report: " + ReportPath;
+    }
+
+    private sealed class BuildValidationResult
+    {
+        public readonly bool Passed;
+        public readonly string Message;
+
+        public BuildValidationResult(bool passed, string message)
+        {
+            Passed = passed;
+            Message = message;
+        }
+    }
+
+    private static void ValidatePyungmooBuildSettings()
+    {
+        bool enabled = EditorBuildSettings.scenes.Any(
+            entry => entry.enabled &&
+                     string.Equals(
+                         entry.path,
+                         ScenePath,
+                         StringComparison.OrdinalIgnoreCase));
+
+        if (!enabled)
+        {
+            throw new InvalidOperationException(
+                "Pyungmoo sahnesi Build Settings içinde aktif değil: " +
+                ScenePath);
+        }
+    }
+
+    private static BuildValidationResult RunStandaloneWindowsBuildValidation()
+    {
+        string tempRoot = Path.Combine(
+            Path.GetTempPath(),
+            "SAGLAMKAFA_Pyungmoo_BuildValidation");
+
+        try
+        {
+            if (Directory.Exists(tempRoot))
+                Directory.Delete(tempRoot, true);
+
+            Directory.CreateDirectory(tempRoot);
+
+            string buildPath = Path.Combine(
+                tempRoot,
+                "PyungmooValidation.exe");
+
+            BuildReport report = BuildPipeline.BuildPlayer(
+                new BuildPlayerOptions
+                {
+                    scenes = new[] { ScenePath },
+                    locationPathName = buildPath,
+                    target = BuildTarget.StandaloneWindows64,
+                    options = BuildOptions.StrictMode
+                });
+
+            bool passed =
+                report.summary.result == BuildResult.Succeeded &&
+                report.summary.totalErrors == 0;
+
+            StringBuilder message = new StringBuilder();
+
+            message.Append(
+                passed ? "PASS" : "FAIL");
+
+            message.Append(
+                " - result=" +
+                report.summary.result +
+                ", errors=" +
+                report.summary.totalErrors +
+                ", warnings=" +
+                report.summary.totalWarnings);
+
+            if (!passed)
+            {
+                foreach (BuildStep step in report.steps)
+                {
+                    if (step.messages == null)
+                        continue;
+
+                    foreach (BuildStepMessage buildMessage in step.messages)
+                    {
+                        if (buildMessage.type == LogType.Error ||
+                            buildMessage.type == LogType.Exception)
+                        {
+                            message.AppendLine();
+                            message.Append(
+                                "BUILD ERROR: " +
+                                buildMessage.content);
+                        }
+                    }
+                }
+            }
+
+            return new BuildValidationResult(
+                passed,
+                message.ToString());
+        }
+        catch (Exception ex)
+        {
+            return new BuildValidationResult(
+                false,
+                "FAIL - BuildPipeline exception: " + ex);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                    Directory.Delete(tempRoot, true);
+            }
+            catch (Exception cleanupEx)
+            {
+                Debug.LogWarning(
+                    "Pyungmoo temporary build cleanup failed: " +
+                    cleanupEx.Message);
+            }
+        }
     }
 
     private static Scene OpenScene()
