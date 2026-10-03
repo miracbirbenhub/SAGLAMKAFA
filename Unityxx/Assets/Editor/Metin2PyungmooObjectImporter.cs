@@ -799,77 +799,155 @@ public static class Metin2PyungmooObjectImporter
 
             try
             {
-                // REQUIRED orientation correction.
-                string arguments =
-                    $"?cmode \"{sourceFile}\" \"{outputFbx}\" " +
-                    "-fbxmeshmerge -rotate 90 0 0";
+                // Older Noesis builds can be unreliable when input/output
+                // paths contain non-ASCII characters. Stage the conversion
+                // through an ASCII-only temporary directory.
+                string tempRoot =
+                    Path.Combine(
+                        Path.GetTempPath(),
+                        "SAGLAMKAFA_Noesis");
 
-                UnityEngine.Debug.Log(
-                    $"Noesis GR2/SPT -> FBX: {modelName}\n" +
-                    $"Source: {sourceFile}\n" +
-                    $"Args: {arguments}");
+                string safeModelName =
+                    Regex.Replace(
+                        modelName ?? "model",
+                        @"[^A-Za-z0-9._-]",
+                        "_");
 
-                using (Process process =
-                       new Process())
+                string workFolder =
+                    Path.Combine(
+                        tempRoot,
+                        safeModelName + "_" +
+                        Guid.NewGuid().ToString("N"));
+
+                Directory.CreateDirectory(workFolder);
+
+                string stagedInput =
+                    Path.Combine(
+                        workFolder,
+                        Path.GetFileName(sourceFile));
+
+                string stagedOutput =
+                    Path.Combine(
+                        workFolder,
+                        safeModelName + ".fbx");
+
+                File.Copy(
+                    sourceFile,
+                    stagedInput,
+                    true);
+
+                string[] optionSets =
                 {
-                    process.StartInfo =
-                        new ProcessStartInfo
-                        {
-                            FileName = noesisPath,
-                            Arguments = arguments,
-                            WorkingDirectory =
-                                Path.GetDirectoryName(
-                                    noesisPath),
-                            UseShellExecute = false,
-                            CreateNoWindow = true,
-                            RedirectStandardOutput = true,
-                            RedirectStandardError = true
-                        };
+                    "-fbxnewexport -fbxmeshmerge -rotate 90 0 0",
+                    "-fbxnewexport -fbxmeshmerge -rotate 90 0 0 -notex",
+                    "-fbxmeshmerge -rotate 90 0 0 -notex"
+                };
 
-                    process.Start();
+                bool success = false;
+                int exitCode = -1;
+                string stdout = string.Empty;
+                string stderr = string.Empty;
 
-                    if (!process.WaitForExit(
-                            NoesisTimeoutMs))
+                foreach (string options in optionSets)
+                {
+                    if (File.Exists(stagedOutput))
+                        File.Delete(stagedOutput);
+
+                    string arguments =
+                        $"?cmode \"{stagedInput}\" \"{stagedOutput}\" {options}";
+
+                    UnityEngine.Debug.Log(
+                        $"Noesis GR2/SPT -> FBX: {modelName}\n" +
+                        $"Source: {sourceFile}\n" +
+                        $"Staged: {stagedInput}\n" +
+                        $"Args: {arguments}");
+
+                    using (Process process = new Process())
                     {
-                        try { process.Kill(); }
-                        catch { }
+                        process.StartInfo =
+                            new ProcessStartInfo
+                            {
+                                FileName = noesisPath,
+                                Arguments = arguments,
+                                WorkingDirectory =
+                                    Path.GetDirectoryName(noesisPath),
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true
+                            };
 
-                        stats.Failed++;
+                        process.Start();
 
-                        string detail =
-                            $"TIMEOUT: {modelName}\nSource={sourceFile}";
-                        stats.FailureDetails.Add(detail);
+                        if (!process.WaitForExit(NoesisTimeoutMs))
+                        {
+                            try { process.Kill(); }
+                            catch { }
+
+                            exitCode = -1;
+                            stderr = "Noesis timeout.";
+                            continue;
+                        }
+
+                        exitCode = process.ExitCode;
+                        stdout = process.StandardOutput.ReadToEnd();
+                        stderr = process.StandardError.ReadToEnd();
+
+                        if (exitCode == 0 &&
+                            File.Exists(stagedOutput) &&
+                            new FileInfo(stagedOutput).Length > 0)
+                        {
+                            success = true;
+                            break;
+                        }
 
                         UnityEngine.Debug.LogWarning(
-                            detail);
-
-                        continue;
-                    }
-
-                    string stdout =
-                        process.StandardOutput.ReadToEnd();
-
-                    string stderr =
-                        process.StandardError.ReadToEnd();
-
-                    if (process.ExitCode != 0 ||
-                        !File.Exists(outputFbx))
-                    {
-                        stats.Failed++;
-
-                        string detail =
-                            $"FAILED: {modelName}\n" +
-                            $"Source={sourceFile}\n" +
-                            $"ExitCode={process.ExitCode}\n" +
+                            $"Noesis denemesi başarısız: {modelName}\n" +
+                            $"Options={options}\n" +
+                            $"ExitCode={exitCode}\n" +
                             $"STDOUT:\n{stdout}\n" +
-                            $"STDERR:\n{stderr}";
-
-                        stats.FailureDetails.Add(detail);
-
-                        UnityEngine.Debug.LogWarning(detail);
-
-                        continue;
+                            $"STDERR:\n{stderr}");
                     }
+                }
+
+                if (!success)
+                {
+                    stats.Failed++;
+
+                    string detail =
+                        $"FAILED: {modelName}\n" +
+                        $"Source={sourceFile}\n" +
+                        $"ExitCode={exitCode}\n" +
+                        $"STDOUT:\n{stdout}\n" +
+                        $"STDERR:\n{stderr}";
+
+                    stats.FailureDetails.Add(detail);
+                    UnityEngine.Debug.LogWarning(detail);
+
+                    try
+                    {
+                        if (Directory.Exists(workFolder))
+                            Directory.Delete(workFolder, true);
+                    }
+                    catch
+                    {
+                    }
+
+                    continue;
+                }
+
+                File.Copy(
+                    stagedOutput,
+                    outputFbx,
+                    true);
+
+                try
+                {
+                    if (Directory.Exists(workFolder))
+                        Directory.Delete(workFolder, true);
+                }
+                catch
+                {
                 }
 
                 stats.Converted++;
