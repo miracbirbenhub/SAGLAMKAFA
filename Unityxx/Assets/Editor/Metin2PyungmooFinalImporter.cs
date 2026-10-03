@@ -463,7 +463,7 @@ public static class Metin2PyungmooFinalImporter
             buildingCanonical.Count);
         report.AppendLine("  Map building instances: " + buildingPlaced);
         report.AppendLine("  Inactive build-inclusion library instances: " +
-            buildingLibrary.childCount);
+            buildingAssetCount);
         report.AppendLine("  Unresolved building IDs during index: " +
             unresolvedBuildingIds.Count);
         report.AppendLine();
@@ -472,7 +472,7 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("  NPC placement records: " + NpcPlacements.Length);
         report.AppendLine("  Map NPC instances: " + npcPlaced);
         report.AppendLine("  Inactive build-inclusion library instances: " +
-            npcLibrary.childCount);
+            npcAssetCount);
         report.AppendLine("  Placeholders: 0");
         report.AppendLine();
         report.AppendLine("VALIDATION");
@@ -495,7 +495,6 @@ public static class Metin2PyungmooFinalImporter
             "Remaining AreaData IDs that are not classified as Building are other map resources and are not silently converted into buildings.");
 
         WriteReport(report.ToString());
-        Selection.activeGameObject = buildingRoot.gameObject;
 
         return
             "AreaData: " + areaObjects.Count + "\n" +
@@ -576,12 +575,18 @@ public static class Metin2PyungmooFinalImporter
                     scenes = new[] { ScenePath },
                     locationPathName = buildPath,
                     target = BuildTarget.StandaloneWindows64,
-                    options = BuildOptions.StrictMode
+                    options = BuildOptions.StrictMode |
+                              BuildOptions.CleanBuildCache
                 });
+
+            bool buildArtifactExists =
+                File.Exists(buildPath) &&
+                new FileInfo(buildPath).Length > 0;
 
             bool passed =
                 report.summary.result == BuildResult.Succeeded &&
-                report.summary.totalErrors == 0;
+                report.summary.totalErrors == 0 &&
+                buildArtifactExists;
 
             StringBuilder message = new StringBuilder();
 
@@ -594,7 +599,16 @@ public static class Metin2PyungmooFinalImporter
                 ", errors=" +
                 report.summary.totalErrors +
                 ", warnings=" +
-                report.summary.totalWarnings);
+                report.summary.totalWarnings +
+                ", artifact=" +
+                (buildArtifactExists ? "present" : "missing"));
+
+            if (buildArtifactExists)
+            {
+                message.Append(
+                    ", bytes=" +
+                    new FileInfo(buildPath).Length);
+            }
 
             if (!passed)
             {
