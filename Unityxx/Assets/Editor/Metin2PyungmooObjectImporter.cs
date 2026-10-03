@@ -592,38 +592,67 @@ public static class Metin2PyungmooObjectImporter
                 throw new InvalidOperationException("Pyungmoo GameObject'i bulunamadı.");
 
             const string buildingsRootName = "Metin2Buildings";
-            Transform oldRoot = mapRoot.transform.Find(buildingsRootName);
+
+            Transform oldRoot =
+                mapRoot.transform.Find(buildingsRootName);
+
             if (oldRoot != null)
-                UnityEngine.Object.DestroyImmediate(oldRoot.gameObject);
+                UnityEngine.Object.DestroyImmediate(
+                    oldRoot.gameObject);
 
             Transform buildingsRoot =
                 new GameObject(buildingsRootName).transform;
-            buildingsRoot.SetParent(mapRoot.transform, false);
+
+            buildingsRoot.SetParent(
+                mapRoot.transform,
+                false);
 
             string repoRoot = GetRepoRoot();
 
             string mapRootPath = FindDirectoryOrThrow(
                 repoRoot,
-                Path.Combine("Metin2Client", "OutdoorC1", "metin2_map_c1"),
-                Path.Combine("OutdoorC1", "metin2_map_c1"));
+                Path.Combine(
+                    "Metin2Client",
+                    "OutdoorC1",
+                    "metin2_map_c1"),
+                Path.Combine(
+                    "OutdoorC1",
+                    "metin2_map_c1"));
 
             string propertyRoot = FindDirectoryOrThrow(
                 repoRoot,
-                Path.Combine("Metin2Client", "Property", "property"),
-                Path.Combine("Metin2Client", "Property"),
-                Path.Combine("Property", "property"),
-                Path.Combine("Property"));
+                Path.Combine(
+                    "Metin2Client",
+                    "Property",
+                    "property"),
+                Path.Combine(
+                    "Metin2Client",
+                    "Property"),
+                Path.Combine(
+                    "Property",
+                    "property"),
+                Path.Combine(
+                    "Property"));
 
-            var propertyRoots = new List<string> { propertyRoot };
+            var propertyRoots =
+                new List<string>
+                {
+                    propertyRoot
+                };
 
-            string season3PropertyRoot = Path.Combine(
-                repoRoot,
-                "Metin2Client",
-                "season3_eu",
-                "property");
+            string season3PropertyRoot =
+                Path.Combine(
+                    repoRoot,
+                    "Metin2Client",
+                    "season3_eu",
+                    "property");
 
-            if (Directory.Exists(season3PropertyRoot))
-                propertyRoots.Add(season3PropertyRoot);
+            if (Directory.Exists(
+                    season3PropertyRoot))
+            {
+                propertyRoots.Add(
+                    season3PropertyRoot);
+            }
 
             Dictionary<uint, PropertyEntry> properties =
                 LoadProperties(propertyRoots);
@@ -631,64 +660,23 @@ public static class Metin2PyungmooObjectImporter
             List<string> areaFiles =
                 DiscoverAreaFiles(mapRootPath);
 
-            List<PropertyEntry> neededBuildings =
-                new List<PropertyEntry>();
+            const string buildingFolder =
+                "Assets/Metin2Imported/Building";
 
-            HashSet<string> seenSources =
-                new HashSet<string>(
-                    StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, GameObject> buildingModels =
+                BuildBuildingModelIndex(
+                    buildingFolder);
 
-            foreach (string areaFile in areaFiles)
-            {
-                foreach (AreaObject obj in ParseAreaData(areaFile))
-                {
-                    if (!properties.TryGetValue(
-                            obj.PropertyId,
-                            out PropertyEntry property))
-                        continue;
-
-                    if (!IsBuildingProperty(property))
-                        continue;
-
-                    string key =
-                        NormalizePropertySourcePath(
-                            property.SourcePath);
-
-                    if (string.IsNullOrEmpty(key) ||
-                        !seenSources.Add(key))
-                        continue;
-
-                    neededBuildings.Add(property);
-                }
-            }
-
-            Dictionary<string, string> sourceIndex =
-                BuildSourceFileIndex(repoRoot);
-
-            string noesisPath = FindNoesis(repoRoot);
-
-            if (string.IsNullOrEmpty(noesisPath))
-            {
-                throw new FileNotFoundException(
-                    "Noesis.exe bulunamadı. " +
-                    "Eksik Building GR2'lerini FBX'e çevirmek için Noesis gerekli.");
-            }
-
-            ConversionStats conversion =
-                AutoConvertMissingModels(
-                    noesisPath,
-                    neededBuildings,
-                    sourceIndex);
-
-            AssetDatabase.Refresh();
-
-            Dictionary<string, GameObject> modelIndex =
-                BuildModelIndex();
+            PreferPropertiesForExistingBuildings(
+                properties,
+                propertyRoots,
+                buildingModels);
 
             int buildingObjects = 0;
+            int matchedReadyModels = 0;
             int placed = 0;
-            int missingSource = 0;
-            int missingModel = 0;
+            int missingProperty = 0;
+            int missingReadyModel = 0;
 
             var missingModels =
                 new Dictionary<string, int>(
@@ -708,52 +696,65 @@ public static class Metin2PyungmooObjectImporter
                     buildingsRoot,
                     false);
 
-                foreach (AreaObject obj in ParseAreaData(areaFile))
+                foreach (AreaObject obj in
+                         ParseAreaData(areaFile))
                 {
                     if (!properties.TryGetValue(
                             obj.PropertyId,
                             out PropertyEntry property))
-                        continue;
-
-                    if (!IsBuildingProperty(property))
-                        continue;
-
-                    buildingObjects++;
-
-                    if (string.IsNullOrWhiteSpace(
-                            property.SourcePath))
                     {
-                        missingSource++;
+                        missingProperty++;
                         continue;
                     }
+
+                    if (!IsBuildingProperty(
+                            property))
+                    {
+                        continue;
+                    }
+
+                    buildingObjects++;
 
                     string modelName =
                         Path.GetFileNameWithoutExtension(
                             NormalizePropertySourcePath(
                                 property.SourcePath));
 
-                    if (!TryFindModel(
-                            modelIndex,
+                    if (string.IsNullOrWhiteSpace(
+                            modelName))
+                    {
+                        modelName =
+                            property.PropertyName;
+                    }
+
+                    if (!TryFindBuildingModel(
+                            buildingModels,
                             modelName,
                             out GameObject model))
                     {
-                        missingModel++;
+                        missingReadyModel++;
+
                         Increment(
                             missingModels,
                             modelName);
+
                         continue;
                     }
 
+                    matchedReadyModels++;
+
                     GameObject instance =
-                        PrefabUtility.InstantiatePrefab(model)
-                        as GameObject;
+                        PrefabUtility.InstantiatePrefab(
+                            model) as GameObject;
 
                     if (instance == null)
                     {
-                        missingModel++;
+                        missingReadyModel++;
+
                         Increment(
                             missingModels,
                             modelName);
+
                         continue;
                     }
 
@@ -775,58 +776,68 @@ public static class Metin2PyungmooObjectImporter
 
                     instance.isStatic = true;
 
-                    AddMeshColliders(instance);
+                    AddMeshColliders(
+                        instance);
 
                     placed++;
                 }
             }
 
-            var report = new StringBuilder();
+            var report =
+                new StringBuilder();
+
             report.AppendLine(
-                "Pyungmoo Building Rebuild Report");
+                "Pyungmoo Prepared Building Placement Report");
+
             report.AppendLine(
                 DateTime.Now.ToString(
                     "yyyy-MM-dd HH:mm:ss",
                     CultureInfo.InvariantCulture));
+
             report.AppendLine();
+
             report.AppendLine(
                 $"AreaData files: {areaFiles.Count}");
+
             report.AppendLine(
                 $"Building object instances: {buildingObjects}");
+
             report.AppendLine(
-                $"Unique Building sources: {neededBuildings.Count}");
+                $"Hazır FBX ile eşleşen instance: {matchedReadyModels}");
+
             report.AppendLine(
                 $"Yerleştirilen: {placed}");
+
             report.AppendLine(
-                $"Eksik source: {missingSource}");
+                $"Eksik Property: {missingProperty}");
+
             report.AppendLine(
-                $"Eksik Unity model: {missingModel}");
-            report.AppendLine(
-                $"Yeni FBX: {conversion.Converted}");
-            report.AppendLine(
-                $"Zaten mevcut model: {conversion.AlreadyExisting}");
-            report.AppendLine(
-                $"Source bulunamadı: {conversion.MissingSource}");
-            report.AppendLine(
-                $"Noesis hatası: {conversion.Failed}");
+                $"Hazır FBX bulunamayan: {missingReadyModel}");
+
             report.AppendLine();
+
             report.AppendLine(
-                $"Noesis: {noesisPath}");
+                "Kaynak: Assets/Metin2Imported/Building");
+
+            report.AppendLine(
+                "Noesis kullanılmadı.");
+
+            report.AppendLine(
+                "Yeni FBX üretilmedi.");
+
             report.AppendLine(
                 "Koordinat ölçeği: 0.02 Unity m / AreaData unit");
-            report.AppendLine();
-            report.AppendLine(
-                "Bu işlem önce mevcut Unity modellerini kullanır; " +
-                "yalnızca AreaData'nın gerçekten referans verdiği eksik GR2'leri AutoModels altında FBX'e çevirir.");
 
             if (missingModels.Count > 0)
             {
                 report.AppendLine();
-                report.AppendLine(
-                    "Dönüşümden sonra hâlâ bulunamayan modeller:");
 
-                foreach (var item in missingModels
-                             .OrderByDescending(x => x.Value))
+                report.AppendLine(
+                    "Hazır klasörde bulunamayan kaynak modeller:");
+
+                foreach (var item in
+                         missingModels.OrderByDescending(
+                             x => x.Value))
                 {
                     report.AppendLine(
                         $"  {item.Key} x{item.Value}");
@@ -840,34 +851,43 @@ public static class Metin2PyungmooObjectImporter
                     "Pyungmoo",
                     "PyungmooBuildingRebuildReport.txt");
 
-            Directory.CreateDirectory(
-                Path.GetDirectoryName(reportAbsolute));
+            string reportDirectory =
+                Path.GetDirectoryName(
+                    reportAbsolute);
+
+            if (!string.IsNullOrEmpty(
+                    reportDirectory))
+            {
+                Directory.CreateDirectory(
+                    reportDirectory);
+            }
 
             File.WriteAllText(
                 reportAbsolute,
                 report.ToString(),
                 new UTF8Encoding(false));
 
-            AssetDatabase.Refresh();
+            EditorSceneManager.MarkSceneDirty(
+                scene);
 
-            EditorSceneManager.MarkSceneDirty(scene);
-            EditorSceneManager.SaveScene(scene, ScenePath);
+            EditorSceneManager.SaveScene(
+                scene,
+                ScenePath);
+
             AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
 
             Selection.activeGameObject =
                 buildingsRoot.gameObject;
 
             EditorUtility.DisplayDialog(
-                "Pyungmoo Building rebuild tamamlandı",
+                "Pyungmoo hazır binalar yerleştirildi",
                 $"Building instances: {buildingObjects}\n" +
-                $"Unique source: {neededBuildings.Count}\n" +
+                $"Hazır FBX eşleşmesi: {matchedReadyModels}\n" +
                 $"Yerleştirilen: {placed}\n" +
-                $"Eksik Unity model: {missingModel}\n" +
-                $"Yeni FBX: {conversion.Converted}\n" +
-                $"Noesis hatası: {conversion.Failed}\n\n" +
-                "Sadece AreaData'nın gerçekten kullandığı Building kaynakları işlendi.\n\n" +
-                "Rapor:\n" +
-                "Assets/Metin2Generated/Pyungmoo/PyungmooBuildingRebuildReport.txt",
+                $"Eksik hazır FBX: {missingReadyModel}\n\n" +
+                "Noesis çalıştırılmadı.\n" +
+                "Sadece Assets/Metin2Imported/Building kullanıldı.",
                 "Tamam");
         }
         catch (Exception ex)
@@ -876,7 +896,7 @@ public static class Metin2PyungmooObjectImporter
             EditorUtility.ClearProgressBar();
 
             EditorUtility.DisplayDialog(
-                "Pyungmoo Building rebuild hatası",
+                "Pyungmoo Building placement hatası",
                 ex.Message,
                 "Tamam");
         }
