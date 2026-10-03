@@ -1402,6 +1402,9 @@ public static class Metin2PyungmooObjectImporter
         {
             try
             {
+                // Normal property definitions live in directories named
+                // "property", but this client also contains legacy .prb/.prt
+                // definitions directly under Zone beside the source objects.
                 foreach (string dir in Directory.EnumerateDirectories(
                              clientRoot,
                              "property",
@@ -1409,6 +1412,11 @@ public static class Metin2PyungmooObjectImporter
                 {
                     AddRoot(dir);
                 }
+
+                AddRoot(
+                    Path.Combine(
+                        clientRoot,
+                        "Zone"));
             }
             catch (Exception ex)
             {
