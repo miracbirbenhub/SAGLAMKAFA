@@ -418,6 +418,15 @@ public static class Metin2PyungmooObjectImporter
             UnityEngine.Debug.Log(
                 $"Pyungmoo existing Building model index: {buildingModels.Count} alias");
 
+            // A single YPRT/CRC can appear in multiple Property files.
+            // Prefer the candidate whose source basename actually exists
+            // in our prepared Building FBX library. This prevents a generic
+            // object such as general_obj_* from winning over a C1 building.
+            PreferPropertiesForExistingBuildings(
+                properties,
+                propertyRoots,
+                buildingModels);
+
             int buildingProperties = 0;
             int placed = 0;
             int missingProperty = 0;
@@ -893,6 +902,143 @@ public static class Metin2PyungmooObjectImporter
         return source.Contains("/building/") ||
                source.StartsWith("building/") ||
                source.Contains("\\building\\");
+    }
+
+    private static void PreferPropertiesForExistingBuildings(
+        Dictionary<uint, PropertyEntry> properties,
+        IEnumerable<string> propertyRoots,
+        Dictionary<string, GameObject> buildingModels)
+    {
+        if (properties == null ||
+            propertyRoots == null ||
+            buildingModels == null ||
+            buildingModels.Count == 0)
+            return;
+
+        var preferredNames =
+            new HashSet<string>(
+                buildingModels.Keys
+                    .Select(NormalizeBuildingModelName)
+                    .Where(n => !string.IsNullOrWhiteSpace(n)),
+                StringComparer.OrdinalIgnoreCase);
+
+        string[] allowedExtensions =
+        {
+            ".pr",
+            ".prb",
+            ".prt",
+            ".ptr",
+            ".prd",
+            ".pte",
+            ".pre",
+            ".pra"
+        };
+
+        int overrides = 0;
+
+        foreach (string root in propertyRoots.Where(Directory.Exists))
+        {
+            foreach (string file in Directory.EnumerateFiles(
+                         root,
+                         "*.*",
+                         SearchOption.AllDirectories)
+                     .Where(f =>
+                         allowedExtensions.Contains(
+                             Path.GetExtension(f),
+                             StringComparer.OrdinalIgnoreCase)))
+            {
+                try
+                {
+                    string text = File.ReadAllText(file);
+
+                    Match idMatch =
+                        Regex.Match(
+                            text,
+                            @"(?m)^\\s*YPRT\\s*\\r?\\n\\s*(\\d+)\\s*$",
+                            RegexOptions.CultureInvariant);
+
+                    if (!idMatch.Success ||
+                        !ulong.TryParse(
+                            idMatch.Groups[1].Value,
+                            NumberStyles.None,
+                            CultureInfo.InvariantCulture,
+                            out ulong rawId))
+                    {
+                        continue;
+                    }
+
+                    uint id = unchecked((uint)rawId);
+
+                    Match sourceMatch =
+                        Regex.Match(
+                            text,
+                            @"(?mi)^\\s*(?:buildingfile|dungenblockfile|dungeonblockfile|treefile|effectfile|ambiencefile)\\s+""([^""]+)""");
+
+                    if (!sourceMatch.Success)
+                        continue;
+
+                    string sourcePath =
+                        sourceMatch.Groups[1].Value;
+
+                    string sourceName =
+                        Path.GetFileNameWithoutExtension(
+                            sourcePath);
+
+                    string normalized =
+                        NormalizeBuildingModelName(sourceName);
+
+                    if (string.IsNullOrWhiteSpace(normalized) ||
+                        !preferredNames.Contains(normalized))
+                        continue;
+
+                    Match propertyNameMatch =
+                        Regex.Match(
+                            text,
+                            @"(?mi)^\\s*propertyname\\s+""([^""]+)""");
+
+                    Match typeMatch =
+                        Regex.Match(
+                            text,
+                            @"(?mi)^\\s*propertytype\\s+""([^""]+)""");
+
+                    var candidate =
+                        new PropertyEntry
+                        {
+                            Id = id,
+                            PropertyName =
+                                propertyNameMatch.Success
+                                    ? propertyNameMatch.Groups[1].Value
+                                    : Path.GetFileNameWithoutExtension(file),
+                            PropertyType =
+                                typeMatch.Success
+                                    ? typeMatch.Groups[1].Value
+                                    : string.Empty,
+                            SourcePath = sourcePath,
+                            SourcePropertyFile = file
+                        };
+
+                    if (!properties.TryGetValue(
+                            id,
+                            out PropertyEntry existing) ||
+                        !string.Equals(
+                            NormalizeBuildingModelName(
+                                Path.GetFileNameWithoutExtension(
+                                    existing.SourcePath ?? string.Empty)),
+                            normalized,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        properties[id] = candidate;
+                        overrides++;
+                    }
+                }
+                catch
+                {
+                }
+            }
+        }
+
+        UnityEngine.Debug.Log(
+            $"Existing Building Property overrides: {overrides}");
     }
 
     private static Dictionary<string, GameObject>
