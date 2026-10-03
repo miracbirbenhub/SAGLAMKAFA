@@ -47,11 +47,17 @@ public static class Metin2PyungmooIntegrationValidator
                     ScenePath,
                     StringComparison.OrdinalIgnoreCase))
             {
-                result.Fail($"Aktif sahne Pyungmoo değil: {scene.path}");
                 scene = EditorSceneManager.OpenScene(
                     ScenePath,
                     OpenSceneMode.Single);
             }
+
+            result.Check(
+                string.Equals(
+                    scene.path,
+                    ScenePath,
+                    StringComparison.OrdinalIgnoreCase),
+                "Pyungmoo sahnesi aktif.");
 
             result.Check(
                 File.Exists(Path.Combine(
@@ -401,6 +407,11 @@ public static class Metin2PyungmooIntegrationValidator
             if (renderers.Length == 0)
                 rendererless++;
 
+            ValidateRenderableHierarchy(
+                result,
+                child.gameObject,
+                "Building gallery/" + child.name);
+
             GameObject source =
                 PrefabUtility.GetCorrespondingObjectFromSource(
                     child.gameObject);
@@ -487,6 +498,11 @@ public static class Metin2PyungmooIntegrationValidator
 
                 if (child.GetComponentsInChildren<Renderer>(true).Length == 0)
                     invalid++;
+
+                ValidateRenderableHierarchy(
+                    result,
+                    child.gameObject,
+                    "DirectBuilding/" + child.name);
             }
         }
 
@@ -638,6 +654,11 @@ public static class Metin2PyungmooIntegrationValidator
                 rendererless++;
             }
 
+            ValidateRenderableHierarchy(
+                result,
+                identity.gameObject,
+                "NPC/" + identity.gameObject.name);
+
             vnums.TryGetValue(identity.Vnum, out int count);
             vnums[identity.Vnum] = count + 1;
 
@@ -691,6 +712,66 @@ public static class Metin2PyungmooIntegrationValidator
             result.Check(
                 count > 0,
                 $"NPC FBX sahnede kullanılıyor: {assetPath}");
+        }
+    }
+
+    private static void ValidateRenderableHierarchy(
+        ValidationResult result,
+        GameObject root,
+        string label)
+    {
+        Renderer[] renderers =
+            root.GetComponentsInChildren<Renderer>(true);
+
+        if (renderers.Length == 0)
+            return;
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer == null)
+                continue;
+
+            Material[] materials = renderer.sharedMaterials;
+
+            result.Check(
+                materials != null &&
+                materials.Length > 0 &&
+                !materials.Any(m => m == null),
+                $"{label}: tüm Renderer material slotları dolu.");
+
+            foreach (Material material in materials ?? Array.Empty<Material>())
+            {
+                if (material == null)
+                    continue;
+
+                result.Check(
+                    material.shader != null,
+                    $"{label}: material shader mevcut ({material.name}).");
+            }
+
+            if (renderer is MeshRenderer ||
+                renderer is SkinnedMeshRenderer)
+            {
+                if (renderer is MeshRenderer meshRenderer)
+                {
+                    MeshFilter filter =
+                        meshRenderer.GetComponent<MeshFilter>();
+
+                    result.Check(
+                        filter != null && filter.sharedMesh != null,
+                        $"{label}: MeshRenderer için Mesh mevcut.");
+                }
+                else if (renderer is SkinnedMeshRenderer skinned)
+                {
+                    result.Check(
+                        skinned.sharedMesh != null,
+                        $"{label}: SkinnedMeshRenderer için Mesh mevcut.");
+                }
+
+                result.Check(
+                    renderer.bounds.size.sqrMagnitude > 0.000001f,
+                    $"{label}: Renderer bounds boş değil.");
+            }
         }
     }
 
