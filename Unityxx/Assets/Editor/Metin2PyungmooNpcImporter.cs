@@ -33,8 +33,8 @@ public static class Metin2PyungmooNpcImporter
         new(20343, "Uzak Dövüş Öğretmeni", "UNVERIFIED", 444, 635, 7),
         new(20344, "Büyülü Silah Öğretmeni", "UNVERIFIED", 443, 644, 7),
         new(20345, "Kara Büyü Öğretmeni", "UNVERIFIED", 443, 648, 7),
-        new(9001, "İyileştirme Öğretmeni", "arms", 443, 652, 7),
-        new(9002, "Ejderha Gücü Öğretmeni", "defence", 443, 656, 7),
+        new(20346, "İyileştirme Öğretmeni", "UNVERIFIED", 443, 652, 7),
+        new(20347, "Ejderha Gücü Öğretmeni", "UNVERIFIED", 443, 656, 7),
 
         // Village service NPCs.
         new(9001, "Silahçı", "arms", 430, 607, 8),
@@ -77,7 +77,7 @@ public static class Metin2PyungmooNpcImporter
     {
         try
         {
-            if (!File.Exists(Path.Combine(Application.dataPath, "..", "Scenes", "Pyungmoo.unity")))
+            if (!File.Exists(Path.Combine(Application.dataPath, "Scenes", "Pyungmoo.unity")))
             {
                 throw new InvalidOperationException(
                     "Pyungmoo sahnesi bulunamadı: " + ScenePath);
