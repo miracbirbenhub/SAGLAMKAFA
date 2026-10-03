@@ -176,7 +176,7 @@ public static class Metin2PyungmooImporter
         {
             string line = rawLine.Trim();
 
-            Match startMatch = Regex.Match(line, @"^Start Texture(\\d+)$");
+            Match startMatch = Regex.Match(line, @"^Start Texture(\d+)$");
             if (startMatch.Success)
             {
                 currentId = int.Parse(startMatch.Groups[1].Value);
@@ -215,7 +215,7 @@ public static class Metin2PyungmooImporter
                 continue;
             }
 
-            string[] parts = line.Split(new[] { ' ', '\\t' }, StringSplitOptions.RemoveEmptyEntries);
+            string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length == 1 &&
                 float.TryParse(
                     parts[0],
