@@ -23,18 +23,17 @@ public static class Metin2PyungmooNpcImporter
     private static readonly NpcPlacement[] Placements =
     {
         // Skill teachers: placement is verified from the C1 npc.txt source.
-        // Their visual model is intentionally left unresolved for now because
-        // this repository's npclist maps all 20340-20347 entries to one generic
-        // jinno_patrol_spear resource. We will verify the trainer visuals before
-        // asking for GR2 conversion.
-        new(20340, "Bedensel Savaş Öğretmeni", "UNVERIFIED", 444, 623, 7),
-        new(20341, "Zihinsel Savaş Öğretmeni", "UNVERIFIED", 444, 627, 7),
-        new(20342, "Yakın Dövüş Öğretmeni", "UNVERIFIED", 444, 631, 7),
-        new(20343, "Uzak Dövüş Öğretmeni", "UNVERIFIED", 444, 635, 7),
-        new(20344, "Büyülü Silah Öğretmeni", "UNVERIFIED", 443, 644, 7),
-        new(20345, "Kara Büyü Öğretmeni", "UNVERIFIED", 443, 648, 7),
-        new(20346, "İyileştirme Öğretmeni", "UNVERIFIED", 443, 652, 7),
-        new(20347, "Ejderha Gücü Öğretmeni", "UNVERIFIED", 443, 656, 7),
+        // root/npclist.txt maps 20340-20349 to the existing
+        // jinno_patrol_spear client resource, so no additional GR2 conversion
+        // is required for these NPCs at this stage.
+        new(20340, "Bedensel Savaş Öğretmeni", "jinno_patrol_spear", 444, 623, 7),
+        new(20341, "Zihinsel Savaş Öğretmeni", "jinno_patrol_spear", 444, 627, 7),
+        new(20342, "Yakın Dövüş Öğretmeni", "jinno_patrol_spear", 444, 631, 7),
+        new(20343, "Uzak Dövüş Öğretmeni", "jinno_patrol_spear", 444, 635, 7),
+        new(20344, "Büyülü Silah Öğretmeni", "jinno_patrol_spear", 443, 644, 7),
+        new(20345, "Kara Büyü Öğretmeni", "jinno_patrol_spear", 443, 648, 7),
+        new(20346, "İyileştirme Öğretmeni", "jinno_patrol_spear", 443, 652, 7),
+        new(20347, "Ejderha Gücü Öğretmeni", "jinno_patrol_spear", 443, 656, 7),
 
         // Village service NPCs.
         new(9001, "Silahçı", "arms", 430, 607, 8),
@@ -66,10 +65,9 @@ public static class Metin2PyungmooNpcImporter
         new(20358, "İsimsiz Çiçekler", "nnflower", 771, 78, 0),
         new(20357, "Weol Anıtı", "moonstone", 114, 960, 0),
 
-        // Stable Boy vnum is present in the old C1 npc.txt, but the local
-        // npclist maps 20349 to a generic patrol model. Keep it as a marker
-        // until the visual resource is verified.
-        new(20349, "Seyis", "UNVERIFIED", 396, 735, 2)
+        // Stable Boy vnum 20349 is also mapped to jinno_patrol_spear
+        // by root/npclist.txt in this client data set.
+        new(20349, "Seyis", "jinno_patrol_spear", 396, 735, 2)
     };
 
     [MenuItem("Metin2/Pyungmoo/Import Village NPCs")]
