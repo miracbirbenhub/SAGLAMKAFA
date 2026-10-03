@@ -197,26 +197,36 @@ public static class Metin2PyungmooNpcImporter
         if (string.IsNullOrWhiteSpace(modelKey) || modelKey == "UNVERIFIED")
             return null;
 
-        string filter = $"{modelKey} t:Model";
-        string[] guids = AssetDatabase.FindAssets(
-            filter,
-            new[] { ImportedNpcFolder });
-
-        if (guids.Length == 0)
-            return null;
-
-        foreach (string guid in guids.OrderBy(g => g, StringComparer.Ordinal))
+        // Converted NPC files are named like "armsout.FBX", while the source
+        // resource key is "arms". Accept both the exact key and the "out"
+        // suffix used by the GR2 -> FBX conversion workflow.
+        string[] candidateNames =
         {
-            string path = AssetDatabase.GUIDToAssetPath(guid);
-            if (!string.Equals(
-                Path.GetFileNameWithoutExtension(path),
-                modelKey,
-                StringComparison.OrdinalIgnoreCase))
-                continue;
+            modelKey,
+            modelKey + "out"
+        };
 
-            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
-            if (prefab != null)
-                return PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        foreach (string candidateName in candidateNames)
+        {
+            string[] guids = AssetDatabase.FindAssets(
+                $"{candidateName} t:Model",
+                new[] { ImportedNpcFolder });
+
+            foreach (string guid in guids.OrderBy(g => g, StringComparer.Ordinal))
+            {
+                string path = AssetDatabase.GUIDToAssetPath(guid);
+                string fileName = Path.GetFileNameWithoutExtension(path);
+
+                if (!string.Equals(
+                    fileName,
+                    candidateName,
+                    StringComparison.OrdinalIgnoreCase))
+                    continue;
+
+                GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+                if (prefab != null)
+                    return PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+            }
         }
 
         return null;
