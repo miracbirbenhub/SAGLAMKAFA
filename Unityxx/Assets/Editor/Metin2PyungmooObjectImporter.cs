@@ -45,11 +45,15 @@ public static class Metin2PyungmooObjectImporter
             objectRoot.SetParent(mapRoot.transform, false);
 
             string repoRoot = GetRepoRoot();
-            string mapRootPath = Path.Combine(
-                repoRoot, "Metin2Client", "OutdoorC1", "metin2_map_c1");
+            string mapRootPath = FindRequiredDirectory(
+                repoRoot,
+                Path.Combine("OutdoorC1", "metin2_map_c1"),
+                Path.Combine("Metin2Client", "OutdoorC1", "metin2_map_c1"));
 
-            string propertyRoot = Path.Combine(
-                repoRoot, "Metin2Client", "Property", "property");
+            string propertyRoot = FindRequiredDirectory(
+                repoRoot,
+                "Property",
+                Path.Combine("Metin2Client", "Property"));
 
             if (!Directory.Exists(mapRootPath))
                 throw new DirectoryNotFoundException("C1 map klasörü bulunamadı:\n" + mapRootPath);
@@ -543,6 +547,74 @@ public static class Metin2PyungmooObjectImporter
         return added;
     }
 
+    private static string FindRequiredDirectory(
+        string repoRoot,
+        params string[] relativeCandidates)
+    {
+        foreach (string relative in relativeCandidates)
+        {
+            string candidate = Path.Combine(repoRoot, relative);
+            if (Directory.Exists(candidate))
+                return candidate;
+        }
+
+        // Search only nearby workspace levels for an exact folder name.
+        string parent = Directory.GetParent(repoRoot)?.FullName;
+        if (!string.IsNullOrEmpty(parent))
+        {
+            foreach (string relative in relativeCandidates)
+            {
+                string leaf = Path.GetFileName(relative.TrimEnd(
+                    Path.DirectorySeparatorChar,
+                    Path.AltDirectorySeparatorChar));
+
+                try
+                {
+                    string found = Directory
+                        .EnumerateDirectories(parent, leaf, SearchOption.AllDirectories)
+                        .FirstOrDefault();
+                    if (!string.IsNullOrEmpty(found))
+                        return found;
+                }
+                catch
+                {
+                    // Keep trying the explicit candidates.
+                }
+            }
+        }
+
+        throw new DirectoryNotFoundException(
+            "Gerekli klasör bulunamadı. Adaylar: " +
+            string.Join(" | ", relativeCandidates));
+    }
+
+    private static IEnumerable<string> EnumerateGr2Files(
+        string zoneRoot,
+        string repoRoot)
+    {
+        var yielded = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (string file in Directory.EnumerateFiles(
+            zoneRoot, "*.gr2", SearchOption.AllDirectories))
+        {
+            if (yielded.Add(Path.GetFullPath(file)))
+                yield return file;
+        }
+
+        // Some unpack layouts keep Zone under a nested Metin2Client folder.
+        // Search the repository root as a fallback but never recurse into Unity.
+        foreach (string file in Directory.EnumerateFiles(
+            repoRoot, "*.gr2", SearchOption.AllDirectories))
+        {
+            string normalized = file.Replace('\\', '/');
+            if (normalized.IndexOf("/Unityxx/", StringComparison.OrdinalIgnoreCase) >= 0)
+                continue;
+
+            if (yielded.Add(Path.GetFullPath(file)))
+                yield return file;
+        }
+    }
+
     private static string FindNoesis(string repoRoot)
     {
         string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -591,10 +663,17 @@ public static class Metin2PyungmooObjectImporter
         string noesisPath,
         HashSet<string> neededModelNames)
     {
-        string zoneRoot = Path.Combine(repoRoot, "Metin2Client", "Zone");
-        if (!Directory.Exists(zoneRoot))
+        string zoneRoot;
+        try
         {
-            UnityEngine.Debug.LogWarning("GR2 kaynak klasörü bulunamadı: " + zoneRoot);
+            zoneRoot = FindRequiredDirectory(
+                repoRoot,
+                "Zone",
+                Path.Combine("Metin2Client", "Zone"));
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogWarning("GR2 kaynak klasörü bulunamadı: " + ex.Message);
             return;
         }
 
@@ -614,12 +693,15 @@ public static class Metin2PyungmooObjectImporter
 
         var gr2ByName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (string gr2 in Directory.EnumerateFiles(zoneRoot, "*.gr2", SearchOption.AllDirectories))
+        foreach (string gr2 in EnumerateGr2Files(zoneRoot, repoRoot))
         {
             string key = Path.GetFileNameWithoutExtension(gr2);
             if (!gr2ByName.ContainsKey(key))
                 gr2ByName.Add(key, gr2);
         }
+
+        UnityEngine.Debug.Log(
+            $"Pyungmoo GR2 index: {gr2ByName.Count} model bulundu. Zone={zoneRoot}");
 
         int converted = 0;
         int alreadyExisting = 0;
@@ -647,11 +729,14 @@ public static class Metin2PyungmooObjectImporter
 
             try
             {
+                UnityEngine.Debug.Log(
+                    $"Noesis GR2 -> FBX: {modelName} | {inputGr2}");
+
                 // Metin2 GR2 -> FBX dönüşümünde eksen düzeltmesi zorunludur.
                 // Kullanıcının mevcut Noesis workflow'u ile aynı şekilde
                 // 90,0,0 derece rotasyon uygula.
                 string arguments =
-                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -notex -rotate 90 0 0";
+                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxnewexport -fbxmeshmerge -notex -rotate 90 0 0";
 
                 using (var process = new Process())
                 {
