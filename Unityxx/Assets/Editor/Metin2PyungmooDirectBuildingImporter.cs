@@ -89,7 +89,6 @@ public static class Metin2PyungmooDirectBuildingImporter
             int matchedProperty = 0;
             int missingProperty = 0;
             int missingModel = 0;
-            int previewPlaced = 0;
 
             var missingIds = new Dictionary<uint, int>();
             var missingModelNames =
