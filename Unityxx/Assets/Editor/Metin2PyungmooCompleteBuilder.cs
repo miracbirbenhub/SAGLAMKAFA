@@ -68,6 +68,8 @@ public static class Metin2PyungmooCompleteBuilder
             Metin2PyungmooIntegrationValidator.ValidationResult validation =
                 Metin2PyungmooIntegrationValidator.ValidateCurrentScene();
 
+            Metin2PyungmooIntegrationValidator.WriteReport(validation);
+
             if (!validation.Passed)
             {
                 throw new InvalidOperationException(
@@ -82,6 +84,8 @@ public static class Metin2PyungmooCompleteBuilder
             Metin2PyungmooIntegrationValidator.ValidationResult buildValidation =
                 Metin2PyungmooIntegrationValidator.ValidateAndBuildPlayer();
 
+            Metin2PyungmooIntegrationValidator.WriteReport(buildValidation);
+
             if (!buildValidation.Passed)
             {
                 throw new InvalidOperationException(
@@ -92,7 +96,7 @@ public static class Metin2PyungmooCompleteBuilder
                 "[Pyungmoo FINALIZE] PASS - NPC + Building + MapObjects + Standalone build.");
 
             EditorUtility.DisplayDialog(
-                "PYUNGmoo FINAL PASS",
+                "PYUNGMOO FINAL PASS",
                 "NPC + Building + MapObjects doğrulandı.\n\n" +
                 $"Building FBX gallery: {buildingCount}\n" +
                 "Placeholder: 0\n" +
@@ -106,7 +110,7 @@ public static class Metin2PyungmooCompleteBuilder
                 "[Pyungmoo FINALIZE] FAILED\n" + ex);
 
             EditorUtility.DisplayDialog(
-                "PYUNGmoo FINAL FAILED",
+                "PYUNGMOO FINAL FAILED",
                 "İşlem tamamlanmadı.\n\n" +
                 ex.Message +
                 "\n\nConsole ve PyungmooCompleteValidation.txt dosyasını kontrol edin.",
