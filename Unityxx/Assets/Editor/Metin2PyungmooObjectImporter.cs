@@ -751,7 +751,7 @@ public static class Metin2PyungmooObjectImporter
                 // Kullanıcının mevcut Noesis workflow'u ile aynı şekilde
                 // 90,0,0 derece rotasyon uygula.
                 string arguments =
-                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -notex -rotate 90 0 0";
+                    $"?cmode \"{inputGr2}\" \"{outputFbx}\" -fbxmeshmerge -rotate 90 0 0";
 
                 using (var process = new Process())
                 {
