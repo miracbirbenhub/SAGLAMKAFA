@@ -24,7 +24,9 @@ public static class Metin2PyungmooDirectBuildingImporter
 
     [MenuItem("Metin2/Pyungmoo/Import Existing Building FBX Direct")]
     public static void ImportExistingBuildingFbxDirect()
+public static bool LastImportSucceeded { get; private set; }
     {
+        LastImportSucceeded = false;
         try
         {
             Scene scene = OpenScene();
@@ -250,6 +252,8 @@ public static class Metin2PyungmooDirectBuildingImporter
 
             Selection.activeGameObject = root.gameObject;
 
+            LastImportSucceeded = true;
+
             EditorUtility.DisplayDialog(
                 "Direct Building Import tamamlandı",
                 $"AreaData: {allObjects.Count}\n" +
@@ -266,6 +270,7 @@ public static class Metin2PyungmooDirectBuildingImporter
         }
         catch (Exception ex)
         {
+            LastImportSucceeded = false;
             UnityEngine.Debug.LogException(ex);
             EditorUtility.ClearProgressBar();
 
