@@ -209,11 +209,8 @@ public static class Metin2PyungmooIntegrationValidator
 
         int rendererless = 0;
 
-        foreach (Transform child in gallery.GetComponentsInChildren<Transform>(true))
+        foreach (Transform child in gallery)
         {
-            if (child == gallery)
-                continue;
-
             Renderer[] renderers =
                 child.GetComponentsInChildren<Renderer>(true);
 
@@ -285,28 +282,28 @@ public static class Metin2PyungmooIntegrationValidator
         int instances = 0;
         int invalid = 0;
 
-        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
+        foreach (Transform chunk in root)
         {
-            if (child == root)
-                continue;
+            foreach (Transform child in chunk)
+            {
+                GameObject source =
+                    PrefabUtility.GetCorrespondingObjectFromSource(
+                        child.gameObject);
 
-            GameObject source =
-                PrefabUtility.GetCorrespondingObjectFromSource(
-                    child.gameObject);
+                if (source == null)
+                    continue;
 
-            if (source == null)
-                continue;
+                string sourcePath = AssetDatabase.GetAssetPath(source);
+                if (!sourcePath.EndsWith(
+                        ".fbx",
+                        StringComparison.OrdinalIgnoreCase))
+                    continue;
 
-            string sourcePath = AssetDatabase.GetAssetPath(source);
-            if (!sourcePath.EndsWith(
-                    ".fbx",
-                    StringComparison.OrdinalIgnoreCase))
-                continue;
+                instances++;
 
-            instances++;
-
-            if (child.GetComponentsInChildren<Renderer>(true).Length == 0)
-                invalid++;
+                if (child.GetComponentsInChildren<Renderer>(true).Length == 0)
+                    invalid++;
+            }
         }
 
         result.AddMetric(
@@ -364,6 +361,9 @@ public static class Metin2PyungmooIntegrationValidator
         foreach (Metin2NpcIdentity identity in
                  root.GetComponentsInChildren<Metin2NpcIdentity>(true))
         {
+            if (identity.transform.parent != root)
+                continue;
+
             identityCount++;
 
             if (identity.gameObject.name.StartsWith(
