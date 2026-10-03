@@ -67,6 +67,7 @@ public static class Metin2PyungmooIntegrationValidator
             }
 
             ValidateBuildSettings(result);
+            ValidateC1BuildingSourceCoverage(result);
             ValidateBuildingAssetsAndGallery(result, mapRoot.transform);
             ValidateDirectBuildingInstances(result, mapRoot.transform);
             ValidateNpcAssetsAndScene(result, mapRoot.transform);
@@ -176,6 +177,184 @@ public static class Metin2PyungmooIntegrationValidator
             "Pyungmoo build settings içinde aktif.");
     }
 
+    private static void ValidateC1BuildingSourceCoverage(
+        ValidationResult result)
+    {
+        string projectRoot =
+            Directory.GetParent(Application.dataPath).FullName;
+
+        string repoRoot =
+            Directory.GetParent(projectRoot).FullName;
+
+        string propertyRoot = Path.Combine(
+            repoRoot,
+            "Metin2Client",
+            "Property",
+            "property",
+            "c");
+
+        string buildingSourceRoot = Path.Combine(
+            repoRoot,
+            "Metin2Client",
+            "Zone",
+            "ymir work",
+            "zone",
+            "c",
+            "building");
+
+        if (!Directory.Exists(propertyRoot))
+        {
+            result.Fail(
+                "C1 Building Property klasörü bulunamadı: " +
+                propertyRoot);
+            return;
+        }
+
+        if (!Directory.Exists(buildingSourceRoot))
+        {
+            result.Fail(
+                "C1 Building GR2 klasörü bulunamadı: " +
+                buildingSourceRoot);
+            return;
+        }
+
+        string[] propertyFiles =
+            Directory.GetFiles(
+                    propertyRoot,
+                    "*.prb",
+                    SearchOption.AllDirectories)
+                .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                .ToArray();
+
+        var modelNames =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        var missingGr2 =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        foreach (string propertyFile in propertyFiles)
+        {
+            string text;
+
+            try
+            {
+                text = File.ReadAllText(propertyFile);
+            }
+            catch
+            {
+                continue;
+            }
+
+            Match sourceMatch = Regex.Match(
+                text,
+                @"^\s*(?:buildingfile|dungenblockfile|dungeonblockfile)\s+""([^""]+)""",
+                RegexOptions.Multiline |
+                RegexOptions.IgnoreCase |
+                RegexOptions.CultureInvariant);
+
+            if (!sourceMatch.Success)
+                continue;
+
+            string sourcePath = sourceMatch.Groups[1].Value
+                .Replace('\\', '/');
+
+            if (!sourcePath.Contains(
+                    "/zone/c/building/",
+                    StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            string modelName =
+                Path.GetFileNameWithoutExtension(sourcePath);
+
+            if (string.IsNullOrWhiteSpace(modelName))
+                continue;
+
+            modelNames.Add(
+                NormalizeBuildingName(modelName));
+
+            string gr2Path = Path.Combine(
+                buildingSourceRoot,
+                Path.GetFileName(sourcePath));
+
+            if (!File.Exists(gr2Path))
+                missingGr2.Add(
+                    Path.GetFileName(sourcePath));
+        }
+
+        result.AddMetric(
+            "C1 Building Property source models",
+            modelNames.Count);
+
+        result.AddMetric(
+            "C1 Building source GR2 missing",
+            missingGr2.Count);
+
+        result.Check(
+            modelNames.Count == 36,
+            $"C1 Property'deki benzersiz Building model sayısı beklenen 36 ({modelNames.Count}).");
+
+        result.Check(
+            missingGr2.Count == 0,
+            "C1 Property tarafından referanslanan Building GR2'lerin tamamı mevcut.");
+
+        string absoluteFolder = Path.Combine(
+            Application.dataPath,
+            "Metin2Imported",
+            "Building");
+
+        string[] fbxFiles = Directory.Exists(absoluteFolder)
+            ? Directory.GetFiles(
+                absoluteFolder,
+                "*.*",
+                SearchOption.AllDirectories)
+                .Where(p =>
+                    p.EndsWith(
+                        ".fbx",
+                        StringComparison.OrdinalIgnoreCase))
+                .ToArray()
+            : Array.Empty<string>();
+
+        var normalizedFbx =
+            new HashSet<string>(
+                fbxFiles.Select(
+                    p => NormalizeBuildingName(
+                        Path.GetFileNameWithoutExtension(p))),
+                StringComparer.OrdinalIgnoreCase);
+
+        foreach (string modelName in modelNames)
+        {
+            result.Check(
+                normalizedFbx.Contains(modelName),
+                $"C1 Building Property -> FBX: {modelName}");
+        }
+    }
+
+    private static string NormalizeBuildingName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        string value = name.Trim();
+
+        value = Regex.Replace(
+            value,
+            @"_lod_\d+out$",
+            string.Empty,
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant);
+
+        value = Regex.Replace(
+            value,
+            @"out$",
+            string.Empty,
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant);
+
+        return value.ToLowerInvariant();
+    }
+
     private static void ValidateBuildingAssetsAndGallery(
         ValidationResult result,
         Transform mapRoot)
@@ -188,8 +367,12 @@ public static class Metin2PyungmooIntegrationValidator
         string[] physicalFbx = Directory.Exists(absoluteFolder)
             ? Directory.GetFiles(
                 absoluteFolder,
-                "*.fbx",
+                "*.*",
                 SearchOption.AllDirectories)
+                .Where(p =>
+                    p.EndsWith(
+                        ".fbx",
+                        StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                 .ToArray()
             : Array.Empty<string>();
@@ -335,8 +518,12 @@ public static class Metin2PyungmooIntegrationValidator
         string[] physicalFbx = Directory.Exists(absoluteFolder)
             ? Directory.GetFiles(
                 absoluteFolder,
-                "*.fbx",
+                "*.*",
                 SearchOption.AllDirectories)
+                .Where(p =>
+                    p.EndsWith(
+                        ".fbx",
+                        StringComparison.OrdinalIgnoreCase))
                 .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
                 .ToArray()
             : Array.Empty<string>();
