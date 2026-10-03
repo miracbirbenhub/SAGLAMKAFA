@@ -970,75 +970,257 @@ public static class Metin2PyungmooFinalImporter
     {
         var errors = new List<string>();
 
-        if (buildingLibrary.childCount != buildingAssetCount)
+        if (mapRoot == null)
+            errors.Add("Pyungmoo root null.");
+
+        if (buildingRoot == null)
+            errors.Add("FINAL_Buildings root missing.");
+
+        if (npcRoot == null)
+            errors.Add("FINAL_NPCs root missing.");
+
+        if (buildingLibrary == null || buildingLibrary.childCount != buildingAssetCount)
             errors.Add(
                 "Building library count mismatch: " +
-                buildingLibrary.childCount +
-                "/" +
-                buildingAssetCount);
+                (buildingLibrary == null ? 0 : buildingLibrary.childCount) +
+                "/" + buildingAssetCount);
 
-        if (npcLibrary.childCount != npcAssetCount)
+        if (npcLibrary == null || npcLibrary.childCount != npcAssetCount)
             errors.Add(
                 "NPC library count mismatch: " +
-                npcLibrary.childCount +
-                "/" +
-                npcAssetCount);
+                (npcLibrary == null ? 0 : npcLibrary.childCount) +
+                "/" + npcAssetCount);
 
-        if (buildingPlaced !=
-            buildingRoot.GetComponentsInChildren<Renderer>(true).Length
-            - buildingRoot.GetComponentsInChildren<Renderer>(true)
-                .Count(x => x == null))
+        if (buildingAssetCount != 47)
+            errors.Add("Expected 47 Building FBX assets, got " + buildingAssetCount);
+
+        if (npcAssetCount != 22)
+            errors.Add("Expected 22 NPC FBX assets, got " + npcAssetCount);
+
+        if (npcPlaced <= 0)
+            errors.Add("No NPC instances were placed.");
+
+        if (npcPlaced != NpcPlacements.Length)
+            errors.Add(
+                "NPC placement count mismatch: " +
+                npcPlaced + "/" + NpcPlacements.Length);
+
+        if (buildingPlaced <= 0)
+            errors.Add("No Building instances were placed from AreaData.");
+
+        if (buildingRoot != null)
         {
-            // Renderer count is not an instance count; this block is intentionally
-            // not used as a hard assertion. Root child count is the authoritative
-            // instance count below.
+            if (buildingRoot.childCount != buildingPlaced)
+                errors.Add(
+                    "Building scene instance count mismatch: " +
+                    buildingRoot.childCount + "/" + buildingPlaced);
+
+            foreach (Transform child in buildingRoot)
+            {
+                ValidateSceneInstance(
+                    child.gameObject,
+                    BuildingFolder,
+                    errors);
+
+                if (child.name.IndexOf(
+                        "PLACEHOLDER",
+                        StringComparison.OrdinalIgnoreCase) >= 0)
+                    errors.Add("Building placeholder remains: " + child.name);
+            }
         }
 
-        if (buildingRoot.childCount != buildingPlaced)
-            errors.Add(
-                "Building scene instance count mismatch: " +
-                buildingRoot.childCount +
-                "/" +
-                buildingPlaced);
-
-        if (npcRoot.childCount != npcPlaced)
-            errors.Add(
-                "NPC scene instance count mismatch: " +
-                npcRoot.childCount +
-                "/" +
-                npcPlaced);
-
-        foreach (Transform child in buildingRoot)
+        if (npcRoot != null)
         {
-            Renderer[] renderers =
-                child.GetComponentsInChildren<Renderer>(true);
+            if (npcRoot.childCount != npcPlaced)
+                errors.Add(
+                    "NPC scene instance count mismatch: " +
+                    npcRoot.childCount + "/" + npcPlaced);
 
-            if (renderers.Length == 0)
-                errors.Add("Building instance has no Renderer: " + child.name);
+            foreach (Transform child in npcRoot)
+            {
+                ValidateSceneInstance(
+                    child.gameObject,
+                    NpcFolder,
+                    errors);
 
-            if (child.GetComponentsInChildren<MeshFilter>(true)
-                    .Any(x => x.sharedMesh == null))
-                errors.Add("Building instance has null MeshFilter: " + child.name);
+                if (child.name.IndexOf(
+                        "PLACEHOLDER",
+                        StringComparison.OrdinalIgnoreCase) >= 0)
+                    errors.Add("NPC placeholder remains: " + child.name);
+
+                if (child.GetComponent<Metin2NpcIdentity>() == null)
+                    errors.Add("NPC identity component missing: " + child.name);
+            }
         }
 
-        foreach (Transform child in npcRoot)
+        ValidateLibrary(buildingLibrary, BuildingFolder, buildingAssetCount, errors);
+        ValidateLibrary(npcLibrary, NpcFolder, npcAssetCount, errors);
+
+        string[] legacyRootNames =
         {
-            Renderer[] renderers =
-                child.GetComponentsInChildren<Renderer>(true);
+            "DirectBuildingObjects",
+            "Metin2Buildings",
+            "BuildingFBXPreview",
+            "BuildingLibraryPreview",
+            "NPCs"
+        };
 
-            if (renderers.Length == 0)
-                errors.Add("NPC instance has no Renderer: " + child.name);
-
-            if (child.name.IndexOf(
-                    "PLACEHOLDER",
-                    StringComparison.OrdinalIgnoreCase) >= 0)
-                errors.Add("NPC placeholder remains: " + child.name);
+        foreach (string name in legacyRootNames)
+        {
+            if (mapRoot != null && mapRoot.transform.Find(name) != null)
+                errors.Add("Legacy root still exists: " + name);
         }
 
         if (errors.Count == 0)
-            return "PASS\nNo missing FBX, no placeholders, no scene count mismatches.";
+            return "PASS\nNo missing FBX, no missing mesh/material, no placeholders, no legacy roots, no scene count mismatches.";
 
         return "FAIL\n" + string.Join("\n", errors);
+    }
+
+    private static void ValidateLibrary(
+        Transform library,
+        string expectedFolder,
+        int expectedCount,
+        List<string> errors)
+    {
+        if (library == null)
+            return;
+
+        if (library.gameObject.activeSelf)
+            errors.Add("Asset library must remain inactive: " + library.name);
+
+        var paths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (Transform child in library)
+        {
+            ValidateSceneInstance(child.gameObject, expectedFolder, errors);
+
+            GameObject source =
+                PrefabUtility.GetCorrespondingObjectFromSource(
+                    child.gameObject) as GameObject;
+
+            if (source == null)
+            {
+                errors.Add(
+                    "Library child has no prefab source: " +
+                    child.name);
+                continue;
+            }
+
+            string path = AssetDatabase.GetAssetPath(source);
+            if (string.IsNullOrEmpty(path) ||
+                !path.StartsWith(
+                    expectedFolder + "/",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add(
+                    "Library child points outside expected folder: " +
+                    child.name);
+            }
+
+            if (!paths.Add(path))
+                errors.Add("Duplicate library asset reference: " + path);
+        }
+
+        if (library.childCount != expectedCount)
+            errors.Add(
+                "Library child count mismatch: " +
+                library.childCount + "/" + expectedCount);
+    }
+
+    private static void ValidateSceneInstance(
+        GameObject instance,
+        string expectedFolder,
+        List<string> errors)
+    {
+        if (instance == null)
+        {
+            errors.Add("Null scene instance.");
+            return;
+        }
+
+        Vector3 p = instance.transform.position;
+        if (float.IsNaN(p.x) || float.IsNaN(p.y) || float.IsNaN(p.z) ||
+            float.IsInfinity(p.x) || float.IsInfinity(p.y) || float.IsInfinity(p.z))
+        {
+            errors.Add("Invalid transform position: " + instance.name);
+        }
+
+        GameObject source =
+            PrefabUtility.GetCorrespondingObjectFromSource(instance)
+            as GameObject;
+
+        if (source == null)
+        {
+            errors.Add("Scene instance has no FBX prefab source: " + instance.name);
+        }
+        else
+        {
+            string sourcePath = AssetDatabase.GetAssetPath(source);
+            if (string.IsNullOrEmpty(sourcePath) ||
+                !sourcePath.StartsWith(
+                    expectedFolder + "/",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add(
+                    "Wrong model source for " +
+                    instance.name +
+                    ": " +
+                    sourcePath);
+            }
+        }
+
+        Renderer[] renderers =
+            instance.GetComponentsInChildren<Renderer>(true);
+
+        if (renderers.Length == 0)
+        {
+            errors.Add("No Renderer: " + instance.name);
+            return;
+        }
+
+        foreach (Renderer renderer in renderers)
+        {
+            if (renderer.sharedMaterials == null ||
+                renderer.sharedMaterials.Length == 0)
+            {
+                errors.Add(
+                    "Renderer has no materials: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
+            }
+            else if (renderer.sharedMaterials.Any(x => x == null))
+            {
+                errors.Add(
+                    "Renderer contains null material: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
+            }
+        }
+
+        foreach (MeshFilter filter in
+                 instance.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (filter.sharedMesh == null)
+                errors.Add(
+                    "MeshFilter sharedMesh null: " +
+                    instance.name +
+                    "/" +
+                    filter.name);
+        }
+
+        foreach (SkinnedMeshRenderer skinned in
+                 instance.GetComponentsInChildren<SkinnedMeshRenderer>(true))
+        {
+            if (skinned.sharedMesh == null)
+                errors.Add(
+                    "SkinnedMeshRenderer sharedMesh null: " +
+                    instance.name +
+                    "/" +
+                    skinned.name);
+        }
     }
 
     private static Bounds CalculateMapBounds(GameObject mapRoot)
