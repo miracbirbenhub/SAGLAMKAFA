@@ -14,7 +14,6 @@ using UnityEngine.SceneManagement;
 public static class Metin2PyungmooDirectBuildingImporter
 {
     private const string ScenePath = "Assets/Scenes/Pyungmoo.unity";
-    private const string BuildingFolder = "Assets/Metin2Imported/Building";
     private const string RootName = "DirectBuildingObjects";
     private const string ReportPath =
         "Assets/Metin2Generated/Pyungmoo/PyungmooDirectBuildingReport.txt";
