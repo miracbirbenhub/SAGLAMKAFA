@@ -1,0 +1,299 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
+public static class Metin2PyungmooNpcImporter
+{
+    private const string ScenePath = "Assets/Scenes/Pyungmoo.unity";
+    private const string NpcRootName = "NPCs";
+
+    // C1 map NPC coordinates use the map grid.
+    // The Unity terrain importer represents one map unit as 2 meters,
+    // matching the 200-unit Metin2 terrain CellScale.
+    private const float MapCoordinateScaleMeters = 2.0f;
+    private const float RayStartHeight = 5000.0f;
+    private const float GroundOffset = 0.05f;
+    private const string ImportedNpcFolder = "Assets/Metin2Imported/NPC";
+
+    private static readonly NpcPlacement[] Placements =
+    {
+        // Skill teachers: placement is verified from the C1 npc.txt source.
+        // Their visual model is intentionally left unresolved for now because
+        // this repository's npclist maps all 20340-20345 entries to one generic
+        // jinno_patrol_spear resource. We will verify the trainer visuals before
+        // asking for GR2 conversion.
+        new(20340, "Bedensel Savaş Öğretmeni", "UNVERIFIED", 444, 623, 7),
+        new(20341, "Zihinsel Savaş Öğretmeni", "UNVERIFIED", 444, 627, 7),
+        new(20342, "Yakın Dövüş Öğretmeni", "UNVERIFIED", 444, 631, 7),
+        new(20343, "Uzak Dövüş Öğretmeni", "UNVERIFIED", 444, 635, 7),
+        new(20344, "Büyülü Silah Öğretmeni", "UNVERIFIED", 443, 644, 7),
+        new(20345, "Kara Büyü Öğretmeni", "UNVERIFIED", 443, 648, 7),
+        new(9001, "İyileştirme Öğretmeni", "arms", 443, 652, 7),
+        new(9002, "Ejderha Gücü Öğretmeni", "defence", 443, 656, 7),
+
+        // Village service NPCs.
+        new(9001, "Silahçı", "arms", 430, 607, 8),
+        new(9002, "Zırhçı", "defence", 403, 586, 1),
+        new(9003, "Bakkal", "goods", 383, 693, 5),
+        new(9005, "Depocu", "hotel_grandfa", 315, 560, 3),
+        new(9006, "Yaşlı Kadın", "hotel_grandma", 417, 671, 6),
+        new(20016, "Demirci", "blacksmith", 393, 692, 5),
+
+        // Other fixed village NPCs from the same C1 npc.txt.
+        new(20008, "Octavio", "mr_restaurant", 340, 747, 7),
+        new(20023, "Soon", "bookworm", 454, 530, 0),
+        new(20002, "Ah-Yu", "auntie", 343, 560, 0),
+        new(20003, "Bebek ve Anne", "baby_and_mom", 378, 577, 0),
+        new(20005, "Seramikçi", "ceramist", 292, 718, 0),
+        new(20006, "Mirine", "girl_lost_elder_brother", 336, 770, 0),
+        new(20011, "Bitkici Araştırmacı", "plant_researcher", 425, 716, 0),
+        new(20018, "Baek-Go", "doctor", 465, 612, 0),
+        new(20041, "Dilenci", "beggar", 323, 617, 0),
+
+        // Quest / map service NPCs.
+        new(20355, "Köy Meydanı Gardiyanı", "guard_leader", 286, 639, 0),
+        new(20354, "Şehir Gardiyanı", "guard_leader", 468, 714, 0),
+        new(20084, "Biyolog Chaegirab", "chagirap", 285, 285, 0),
+        new(20086, "Handu-Up", "handaup", 447, 928, 0),
+        new(20087, "Wonda-Rim", "wondaim", 456, 936, 0),
+
+        // Fixed landmark / interaction objects that use NPC-style vnums.
+        new(20358, "İsimsiz Çiçekler", "nnflower", 771, 78, 0),
+        new(20357, "Weol Anıtı", "moonstone", 114, 960, 0),
+
+        // Stable Boy vnum is present in the old C1 npc.txt, but the local
+        // npclist maps 20349 to a generic patrol model. Keep it as a marker
+        // until the visual resource is verified.
+        new(20349, "Seyis", "UNVERIFIED", 396, 735, 2)
+    };
+
+    [MenuItem("Metin2/Pyungmoo/Import Village NPCs")]
+    public static void ImportVillageNpcs()
+    {
+        try
+        {
+            if (!File.Exists(Path.Combine(Application.dataPath, "..", "Scenes", "Pyungmoo.unity")))
+            {
+                throw new InvalidOperationException(
+                    "Pyungmoo sahnesi bulunamadı: " + ScenePath);
+            }
+
+            Scene scene = SceneManager.GetActiveScene();
+            if (!string.Equals(scene.path, ScenePath, StringComparison.OrdinalIgnoreCase))
+            {
+                scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
+            }
+
+            GameObject mapRoot = GameObject.Find("Pyungmoo");
+            if (mapRoot == null)
+                throw new InvalidOperationException("Pyungmoo kök GameObject'i bulunamadı.");
+
+            Transform existingRoot = mapRoot.transform.Find(NpcRootName);
+            if (existingRoot != null)
+                UnityEngine.Object.DestroyImmediate(existingRoot.gameObject);
+
+            var npcRoot = new GameObject(NpcRootName).transform;
+            npcRoot.SetParent(mapRoot.transform, false);
+
+            int loadedModels = 0;
+            int placeholders = 0;
+            int groundMisses = 0;
+
+            foreach (NpcPlacement placement in Placements)
+            {
+                Vector3 position = MapToUnityPosition(placement.MapX, placement.MapY);
+                if (TryProjectToTerrain(position, out float groundY))
+                    position.y = groundY + GroundOffset;
+                else
+                {
+                    position.y = 0.0f;
+                    groundMisses++;
+                }
+
+                GameObject instance = LoadModelPrefab(placement.ModelKey);
+                bool isPlaceholder = instance == null;
+
+                if (isPlaceholder)
+                {
+                    instance = CreatePlaceholder(placement);
+                    placeholders++;
+                }
+                else
+                {
+                    instance.name = $"NPC_{placement.Vnum}_{Sanitize(placement.DisplayName)}";
+                    loadedModels++;
+                }
+
+                instance.transform.SetParent(npcRoot, true);
+                instance.transform.position = position;
+                instance.transform.rotation = Quaternion.Euler(0.0f, placement.Direction * 45.0f, 0.0f);
+
+                Metin2NpcIdentity identity = instance.GetComponent<Metin2NpcIdentity>();
+                if (identity == null)
+                    identity = instance.AddComponent<Metin2NpcIdentity>();
+
+                identity.Initialize(
+                    placement.Vnum,
+                    placement.DisplayName,
+                    new Vector2Int(placement.MapX, placement.MapY));
+
+                MarkPlaceholder(instance, isPlaceholder);
+            }
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+
+            Selection.activeGameObject = npcRoot.gameObject;
+
+            EditorUtility.DisplayDialog(
+                "Pyungmoo NPC yerleşimi hazır",
+                $"NPC kaydı: {Placements.Length}\n" +
+                $"Model bulundu: {loadedModels}\n" +
+                $"Yer tutucu: {placeholders}\n" +
+                $"Zemin raycast bulunamadı: {groundMisses}\n\n" +
+                "Eksik modeller şimdilik yer tutucu olarak gösterildi.",
+                "Tamam");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogException(ex);
+            EditorUtility.DisplayDialog("NPC import hatası", ex.Message, "Tamam");
+        }
+    }
+
+    private static Vector3 MapToUnityPosition(int mapX, int mapY)
+    {
+        return new Vector3(
+            mapX * MapCoordinateScaleMeters,
+            0.0f,
+            mapY * MapCoordinateScaleMeters);
+    }
+
+    private static bool TryProjectToTerrain(Vector3 xzPosition, out float groundY)
+    {
+        Ray ray = new Ray(
+            new Vector3(xzPosition.x, RayStartHeight, xzPosition.z),
+            Vector3.down);
+
+        if (Physics.Raycast(ray, out RaycastHit hit, RayStartHeight + 100.0f))
+        {
+            groundY = hit.point.y;
+            return true;
+        }
+
+        groundY = 0.0f;
+        return false;
+    }
+
+    private static GameObject LoadModelPrefab(string modelKey)
+    {
+        if (string.IsNullOrWhiteSpace(modelKey) || modelKey == "UNVERIFIED")
+            return null;
+
+        string filter = $"{modelKey} t:Model";
+        string[] guids = AssetDatabase.FindAssets(
+            filter,
+            new[] { ImportedNpcFolder });
+
+        if (guids.Length == 0)
+            return null;
+
+        foreach (string guid in guids.OrderBy(g => g, StringComparer.Ordinal))
+        {
+            string path = AssetDatabase.GUIDToAssetPath(guid);
+            if (!string.Equals(
+                Path.GetFileNameWithoutExtension(path),
+                modelKey,
+                StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            GameObject prefab = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            if (prefab != null)
+                return PrefabUtility.InstantiatePrefab(prefab) as GameObject;
+        }
+
+        return null;
+    }
+
+    private static GameObject CreatePlaceholder(NpcPlacement placement)
+    {
+        GameObject go = GameObject.CreatePrimitive(
+            placement.ModelKey == "UNVERIFIED"
+                ? PrimitiveType.Capsule
+                : PrimitiveType.Cylinder);
+
+        go.name = $"NPC_PLACEHOLDER_{placement.Vnum}_{Sanitize(placement.DisplayName)}";
+        go.transform.localScale = new Vector3(0.8f, 1.0f, 0.8f);
+
+        Collider collider = go.GetComponent<Collider>();
+        if (collider != null)
+            UnityEngine.Object.DestroyImmediate(collider);
+
+        return go;
+    }
+
+    private static void MarkPlaceholder(GameObject go, bool placeholder)
+    {
+        if (!placeholder)
+            return;
+
+        MeshRenderer renderer = go.GetComponentInChildren<MeshRenderer>();
+        if (renderer == null)
+            return;
+
+        Shader shader = Shader.Find("Universal Render Pipeline/Lit");
+        if (shader == null)
+            shader = Shader.Find("Standard");
+
+        if (shader == null)
+            return;
+
+        Material material = new Material(shader)
+        {
+            name = "Pyungmoo_NpcPlaceholder"
+        };
+        material.color = new Color(1.0f, 0.65f, 0.1f);
+        renderer.sharedMaterial = material;
+    }
+
+    private static string Sanitize(string name)
+    {
+        foreach (char c in Path.GetInvalidFileNameChars())
+            name = name.Replace(c, '_');
+
+        return name.Replace(' ', '_');
+    }
+
+    private sealed class NpcPlacement
+    {
+        public readonly int Vnum;
+        public readonly string DisplayName;
+        public readonly string ModelKey;
+        public readonly int MapX;
+        public readonly int MapY;
+        public readonly int Direction;
+
+        public NpcPlacement(
+            int vnum,
+            string displayName,
+            string modelKey,
+            int mapX,
+            int mapY,
+            int direction)
+        {
+            Vnum = vnum;
+            DisplayName = displayName;
+            ModelKey = modelKey;
+            MapX = mapX;
+            MapY = mapY;
+            Direction = direction;
+        }
+    }
+}
