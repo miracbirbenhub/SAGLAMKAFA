@@ -258,9 +258,10 @@ public static class Metin2PyungmooDirectBuildingImporter
             EditorUtility.DisplayDialog(
                 "Direct Building Import tamamlandı",
                 $"AreaData: {allObjects.Count}\n" +
-                $"Building Property IDs: {buildingProperties.Count}\n" +
-                $"Eşleşen bina instance: {matchedProperty}\n" +
-                $"Haritaya yerleştirilen FBX: {placed}\n" +
+                $"Building Property records with existing FBX: {buildingProperties.Count}\n" +
+                $"AreaData -> Building eşleşmesi: {matchedProperty}\n" +
+                $"Haritaya yerleştirilen gerçek Building instance: {placed}\n" +
+                "Not: Bu sayaç 47 FBX'in hepsini yerleştirmez; sadece AreaData'da gerçekten referanslanan modelleri yerleştirir.\n" +
                 $"Preview olarak yerleştirilen FBX: {previewPlaced}\n" +
                 $"Eksik Property: {missingProperty}\n" +
                 $"Eksik Building FBX: {missingModel}\n\n" +
