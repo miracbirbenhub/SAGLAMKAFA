@@ -32,6 +32,12 @@ public static class Metin2PyungmooCompleteBuilder
 
             Metin2PyungmooNpcImporter.ImportVillageNpcs();
 
+            if (!Metin2PyungmooNpcImporter.LastImportSucceeded)
+            {
+                throw new InvalidOperationException(
+                    "NPC importer başarısız oldu.");
+            }
+
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
                 "AreaData / MapObjects yeniden oluşturuluyor...",
@@ -39,12 +45,24 @@ public static class Metin2PyungmooCompleteBuilder
 
             Metin2PyungmooObjectImporter.ImportMapObjects();
 
+            if (!Metin2PyungmooObjectImporter.LastImportSucceeded)
+            {
+                throw new InvalidOperationException(
+                    "MapObjects importer başarısız oldu.");
+            }
+
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
                 "Gerçek Building FBX AreaData instance'ları oluşturuluyor...",
                 0.50f);
 
             Metin2PyungmooDirectBuildingImporter.ImportExistingBuildingFbxDirect();
+
+            if (!Metin2PyungmooDirectBuildingImporter.LastImportSucceeded)
+            {
+                throw new InvalidOperationException(
+                    "Direct Building importer başarısız oldu.");
+            }
 
             EditorUtility.DisplayProgressBar(
                 "Pyungmoo Finalize",
