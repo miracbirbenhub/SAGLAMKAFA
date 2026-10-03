@@ -27,12 +27,9 @@ public static class Metin2PyungmooObjectImporter
 
     private const int NoesisTimeoutMs = 120000;
 
-    public static bool LastImportSucceeded { get; private set; }
-
     [MenuItem("Metin2/Pyungmoo/Import Map Objects")]
     public static void ImportMapObjects()
     {
-        LastImportSucceeded = false;
         try
         {
             Scene scene = OpenPyungmooScene();
@@ -329,8 +326,6 @@ public static class Metin2PyungmooObjectImporter
 
             Selection.activeGameObject = objectRoot.gameObject;
 
-            LastImportSucceeded = true;
-
             EditorUtility.DisplayDialog(
                 "Pyungmoo objeleri hazır",
                 $"Chunk: {chunkCount}\n" +
@@ -348,7 +343,6 @@ public static class Metin2PyungmooObjectImporter
         }
         catch (Exception ex)
         {
-            LastImportSucceeded = false;
             UnityEngine.Debug.LogException(ex);
 
             EditorUtility.DisplayDialog(
