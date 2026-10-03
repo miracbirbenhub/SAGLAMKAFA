@@ -83,9 +83,10 @@ public static class Metin2PyungmooObjectImporter
                 $"unique Property matches={uniquePropertyMatches}, " +
                 $"Property index={properties.Count}");
 
-            // Build a local filename index once. We resolve sources by the
-            // model basename written inside the Property file.
-            Dictionary<string, string> sourceByName =
+            // Resolve each Property's source by its full "ymir work/..." path,
+            // not merely by basename. The client can contain the same filename
+            // in multiple zones/maps.
+            Dictionary<string, string> sourceByRelativePath =
                 BuildSourceFileIndex(repoRoot);
 
             string noesisPath = FindNoesis(repoRoot);
@@ -94,18 +95,19 @@ public static class Metin2PyungmooObjectImporter
 
             if (!string.IsNullOrEmpty(noesisPath))
             {
-                HashSet<string> neededModels = allObjects
+                List<PropertyEntry> neededProperties = allObjects
                     .Where(o => properties.ContainsKey(o.PropertyId))
                     .Select(o => properties[o.PropertyId])
-                    .Where(p => IsGeometryProperty(p))
-                    .Select(p => Path.GetFileNameWithoutExtension(p.SourcePath))
-                    .Where(n => !string.IsNullOrWhiteSpace(n))
-                    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                    .Where(IsGeometryProperty)
+                    .GroupBy(p => NormalizePropertySourcePath(p.SourcePath),
+                        StringComparer.OrdinalIgnoreCase)
+                    .Select(g => g.First())
+                    .ToList();
 
                 conversion = AutoConvertMissingModels(
                     noesisPath,
-                    neededModels,
-                    sourceByName);
+                    neededProperties,
+                    sourceByRelativePath);
             }
             else
             {
@@ -589,56 +591,100 @@ public static class Metin2PyungmooObjectImporter
             new Dictionary<string, string>(
                 StringComparer.OrdinalIgnoreCase);
 
-        string[] extensions =
+        string clientRoot = Path.Combine(
+            repoRoot,
+            "Metin2Client");
+
+        if (!Directory.Exists(clientRoot))
+            clientRoot = repoRoot;
+
+        foreach (string pattern in new[] { "*.gr2", "*.spt" })
         {
-            "*.gr2",
-            "*.spt",
-            "*.mse"
-        };
-
-        foreach (string extension in extensions)
-        {
-            IEnumerable<string> files;
-
-            try
+            foreach (string file in Directory.EnumerateFiles(
+                         clientRoot,
+                         pattern,
+                         SearchOption.AllDirectories))
             {
-                files = Directory.EnumerateFiles(
-                    repoRoot,
-                    extension,
-                    SearchOption.AllDirectories);
-            }
-            catch
-            {
-                continue;
-            }
+                string relative =
+                    Path.GetRelativePath(
+                        clientRoot,
+                        file)
+                    .Replace('\\', '/');
 
-            foreach (string file in files)
-            {
                 string normalized =
-                    file.Replace('\\', '/');
+                    NormalizePropertySourcePath(
+                        relative);
 
-                if (normalized.IndexOf(
-                        "/Unityxx/",
-                        StringComparison.OrdinalIgnoreCase) >= 0)
+                if (!string.IsNullOrEmpty(normalized) &&
+                    !result.ContainsKey(normalized))
                 {
-                    continue;
+                    result.Add(normalized, file);
                 }
-
-                string key =
-                    Path.GetFileNameWithoutExtension(file);
-
-                if (string.IsNullOrWhiteSpace(key))
-                    continue;
-
-                if (!result.ContainsKey(key))
-                    result.Add(key, file);
             }
         }
 
         UnityEngine.Debug.Log(
-            $"Metin2 source model index: {result.Count} dosya");
+            $"Metin2 exact source index: {result.Count} dosya");
 
         return result;
+    }
+
+    private static string NormalizePropertySourcePath(
+        string sourcePath)
+    {
+        if (string.IsNullOrWhiteSpace(sourcePath))
+            return string.Empty;
+
+        string s =
+            sourcePath.Trim()
+                .Replace('\\', '/');
+
+        int marker =
+            s.IndexOf(
+                "ymir work/",
+                StringComparison.OrdinalIgnoreCase);
+
+        if (marker >= 0)
+        {
+            s = s.Substring(
+                marker + "ymir work/".Length);
+        }
+        else
+        {
+            s = s.TrimStart('/');
+        }
+
+        return s.ToLowerInvariant();
+    }
+
+    private static string ResolvePropertySource(
+        string propertySourcePath,
+        Dictionary<string, string> sourceIndex)
+    {
+        string key =
+            NormalizePropertySourcePath(
+                propertySourcePath);
+
+        if (sourceIndex.TryGetValue(
+                key,
+                out string exact))
+        {
+            return exact;
+        }
+
+        // Fallback: some unpack layouts omit "ymir work" from the
+        // relative path. Try suffix matching only after exact lookup.
+        foreach (KeyValuePair<string, string> pair in sourceIndex)
+        {
+            if (pair.Key.EndsWith(
+                    key,
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                return pair.Value;
+            }
+        }
+
+        return null;
     }
 
     private static bool IsGeometryProperty(
@@ -660,8 +706,8 @@ public static class Metin2PyungmooObjectImporter
     private static ConversionStats
         AutoConvertMissingModels(
             string noesisPath,
-            HashSet<string> neededModels,
-            Dictionary<string, string> sourceByName)
+            List<PropertyEntry> neededProperties,
+            Dictionary<string, string> sourceByRelativePath)
     {
         string projectRoot =
             Directory.GetParent(Application.dataPath).FullName;
@@ -687,22 +733,35 @@ public static class Metin2PyungmooObjectImporter
 
         var stats = new ConversionStats();
 
-        foreach (string modelName in neededModels.OrderBy(
-                     x => x,
-                     StringComparer.OrdinalIgnoreCase))
+        foreach (PropertyEntry property in neededProperties)
         {
+            if (string.IsNullOrWhiteSpace(property.SourcePath))
+            {
+                stats.MissingSource++;
+                continue;
+            }
+
+            string sourceFile =
+                ResolvePropertySource(
+                    property.SourcePath,
+                    sourceByRelativePath);
+
+            if (string.IsNullOrEmpty(sourceFile))
+            {
+                stats.MissingSource++;
+                UnityEngine.Debug.LogWarning(
+                    $"Property source bulunamadı: {property.PropertyName} -> {property.SourcePath}");
+                continue;
+            }
+
+            string modelName =
+                Path.GetFileNameWithoutExtension(
+                    sourceFile);
+
             if (existingModels.Contains(modelName) ||
                 existingModels.Contains(modelName + "out"))
             {
                 stats.AlreadyExisting++;
-                continue;
-            }
-
-            if (!sourceByName.TryGetValue(
-                    modelName,
-                    out string sourceFile))
-            {
-                stats.MissingSource++;
                 continue;
             }
 
@@ -791,7 +850,7 @@ public static class Metin2PyungmooObjectImporter
                     stats.Converted /
                     (float)Math.Max(
                         1,
-                        neededModels.Count));
+                        neededProperties.Count));
             }
             catch (Exception ex)
             {
