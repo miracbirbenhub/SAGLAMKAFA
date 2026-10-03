@@ -416,7 +416,7 @@ public static class Metin2PyungmooObjectImporter
                 BuildBuildingModelIndex(buildingFolder);
 
             UnityEngine.Debug.Log(
-                $"Pyungmoo existing Building model index: {buildingModels.Count} model");
+                $"Pyungmoo existing Building model index: {buildingModels.Count} alias");
 
             int buildingProperties = 0;
             int placed = 0;
@@ -624,6 +624,9 @@ public static class Metin2PyungmooObjectImporter
                 "*.fbx",
                 SearchOption.AllDirectories);
 
+        UnityEngine.Debug.Log(
+            $"Building FBX dosyaları bulundu: {files.Length} -> {absoluteFolder}");
+
         foreach (string file in files.OrderBy(
                      p => p,
                      StringComparer.OrdinalIgnoreCase))
@@ -637,20 +640,37 @@ public static class Metin2PyungmooObjectImporter
                     file)
                 .Replace('\\', '/');
 
-            // Git pull sonrası importer henüz çalışmadıysa bile FBX'i
-            // senkron olarak içeri alıp hemen kullanabil.
-            AssetDatabase.ImportAsset(
-                assetPath,
-                ImportAssetOptions.ForceSynchronousImport);
+            GameObject prefab = null;
 
-            GameObject prefab =
-                AssetDatabase.LoadAssetAtPath<GameObject>(
-                    assetPath);
+            try
+            {
+                AssetDatabase.ImportAsset(
+                    assetPath,
+                    ImportAssetOptions.ForceSynchronousImport);
+
+                prefab =
+                    AssetDatabase.LoadAssetAtPath<GameObject>(
+                        assetPath);
+
+                if (prefab == null)
+                {
+                    prefab =
+                        AssetDatabase.LoadAllAssetsAtPath(
+                                assetPath)
+                            .OfType<GameObject>()
+                            .FirstOrDefault();
+                }
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"Building asset import/load hatası: {assetPath}\n{ex.Message}");
+            }
 
             if (prefab == null)
             {
                 UnityEngine.Debug.LogWarning(
-                    $"Building FBX Unity model olarak yüklenemedi: {assetPath}");
+                    $"Building FBX GameObject olarak yüklenemedi: {assetPath}");
                 continue;
             }
 
@@ -746,11 +766,23 @@ public static class Metin2PyungmooObjectImporter
             return true;
         }
 
-        if (modelIndex.TryGetValue(
-                modelName + "out",
-                out model))
+        string[] candidates =
         {
-            return true;
+            modelName + "out",
+            modelName + "_lod_01out",
+            normalized + "out",
+            normalized + "_lod_01out"
+        };
+
+        foreach (string candidate in candidates.Distinct(
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            if (modelIndex.TryGetValue(
+                    candidate,
+                    out model))
+            {
+                return true;
+            }
         }
 
         model = null;
