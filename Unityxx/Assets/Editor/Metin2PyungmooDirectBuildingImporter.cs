@@ -211,7 +211,7 @@ public static class Metin2PyungmooDirectBuildingImporter
             report.AppendLine(
                 "Kaynak model klasörü: Assets/Metin2Imported/Building");
             report.AppendLine(
-                "Koordinat: x*0.02, y=z*0.02, z=-sourceY*0.02");
+                "Koordinat: UnityX=sourceX*0.02, UnityY=(sourceZ+heightBias)*0.02, UnityZ=-sourceY*0.02");
 
             if (missingIds.Count > 0)
             {
