@@ -352,9 +352,52 @@ public static class Metin2PyungmooFinalImporter
             throw new InvalidOperationException(validation);
 
         EditorSceneManager.MarkSceneDirty(scene);
-        EditorSceneManager.SaveScene(scene, ScenePath);
+        if (!EditorSceneManager.SaveScene(scene, ScenePath))
+            throw new InvalidOperationException("Pyungmoo sahnesi kaydedilemedi.");
+
         AssetDatabase.SaveAssets();
         AssetDatabase.Refresh();
+
+        // Persisted-state verification: reload the serialized scene and verify
+        // the same prefab links, instance counts, inactive asset libraries,
+        // renderer/mesh/material state and the absence of legacy/placeholder roots.
+        scene = EditorSceneManager.OpenScene(
+            ScenePath,
+            OpenSceneMode.Single);
+
+        mapRoot = GameObject.Find("Pyungmoo");
+        if (mapRoot == null)
+            throw new InvalidOperationException(
+                "Save/reload sonrası Pyungmoo root bulunamadı.");
+
+        Transform persistedBuildingRoot =
+            mapRoot.transform.Find(BuildingRootName);
+        Transform persistedNpcRoot =
+            mapRoot.transform.Find(NpcRootName);
+        Transform persistedBuildingLibrary =
+            mapRoot.transform.Find(BuildingLibraryRootName);
+        Transform persistedNpcLibrary =
+            mapRoot.transform.Find(NpcLibraryRootName);
+
+        string persistedValidation = ValidateFinalScene(
+            mapRoot,
+            persistedBuildingRoot,
+            persistedNpcRoot,
+            persistedBuildingLibrary,
+            persistedNpcLibrary,
+            buildingModels.Count,
+            npcModels.Count,
+            buildingPlaced,
+            npcPlaced);
+
+        if (!persistedValidation.StartsWith(
+                "PASS",
+                StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException(
+                "Kaydetme + yeniden açma doğrulaması başarısız:\n" +
+                persistedValidation);
+        }
 
         StringBuilder report = new StringBuilder();
         report.AppendLine("PYUNGMOO FINAL IMPORT / VERIFY");
@@ -393,7 +436,8 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("  Placeholders: 0");
         report.AppendLine();
         report.AppendLine("VALIDATION");
-        report.AppendLine("  " + validation.Replace("\n", "\n  "));
+        report.AppendLine("  Pre-save: " + validation.Replace("\n", "\n  "));
+        report.AppendLine("  Post-save/reload: " + persistedValidation.Replace("\n", "\n  "));
         report.AppendLine();
         report.AppendLine(
             "All 47 Building FBX assets and all 22 NPC FBX assets are serialized into the Pyungmoo scene.");
@@ -417,7 +461,7 @@ public static class Metin2PyungmooFinalImporter
             "NPC FBX: " + npcModels.Count + "\n" +
             "Map NPC instance: " + npcPlaced + "\n" +
             "Placeholder: 0\n\n" +
-            "PASS - report: " + ReportPath;
+            "PASS - save/reload verify OK - report: " + ReportPath;
     }
 
     private static Scene OpenScene()
