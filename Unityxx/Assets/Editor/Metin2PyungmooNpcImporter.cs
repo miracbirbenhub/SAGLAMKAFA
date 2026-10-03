@@ -68,7 +68,7 @@ public static class Metin2PyungmooNpcImporter
         new(20349, "Seyis", "jinno_patrol_spear", 396, 735, 2)
     };
 
-    [MenuItem("Metin2/Pyungmoo/Import Village NPCs")]
+    [MenuItem("Metin2/Pyungmoo/LEGACY - Import Village NPCs")]
     public static void ImportVillageNpcs()
     {
         try
