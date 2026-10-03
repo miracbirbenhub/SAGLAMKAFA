@@ -61,23 +61,22 @@ public static class Metin2PyungmooObjectImporter
                 Path.Combine("Metin2Client", "Property"),
                 Path.Combine("Property", "property"),
                 Path.Combine("Property"));
-
-            var propertyRoots = new List<string>
-            {
-                propertyRoot
-            };
-
-            string season3PropertyRoot = Path.Combine(
-                repoRoot,
-                "Metin2Client",
-                "season3_eu",
-                "property");
-
-            if (Directory.Exists(season3PropertyRoot))
-                propertyRoots.Add(season3PropertyRoot);
+            List<string> propertyRoots =
+                DiscoverPropertyRoots(repoRoot, propertyRoot);
 
             Dictionary<uint, PropertyEntry> properties =
                 LoadProperties(propertyRoots);
+
+            // Prepared C1 Building FBXs must win when the same YPRT/CRC
+            // exists in multiple Property files.
+            Dictionary<string, GameObject> preparedBuildingModels =
+                BuildBuildingModelIndex(
+                    "Assets/Metin2Imported/Building");
+
+            PreferPropertiesForExistingBuildings(
+                properties,
+                propertyRoots,
+                preparedBuildingModels);
 
             var allObjects = new List<AreaObject>();
 
@@ -86,17 +85,29 @@ public static class Metin2PyungmooObjectImporter
 
             int propertyMatches = allObjects.Count(
                 o => properties.ContainsKey(o.PropertyId));
-
             int uniquePropertyMatches = allObjects
                 .Where(o => properties.ContainsKey(o.PropertyId))
                 .Select(o => o.PropertyId)
                 .Distinct()
                 .Count();
 
+            int uniqueAreaDataIds = allObjects
+                .Select(o => o.PropertyId)
+                .Distinct()
+                .Count();
+
+            int uniqueMissingPropertyIds = allObjects
+                .Where(o => !properties.ContainsKey(o.PropertyId))
+                .Select(o => o.PropertyId)
+                .Distinct()
+                .Count();
+
             UnityEngine.Debug.Log(
                 $"Pyungmoo preflight: AreaData={allObjects.Count}, " +
+                $"unique AreaData IDs={uniqueAreaDataIds}, " +
                 $"Property matches={propertyMatches}, " +
                 $"unique Property matches={uniquePropertyMatches}, " +
+                $"missing Property IDs={uniqueMissingPropertyIds}, " +
                 $"Property index={properties.Count}");
 
             // Resolve each Property's source by its full "ymir work/..." path,
@@ -104,32 +115,15 @@ public static class Metin2PyungmooObjectImporter
             // in multiple zones/maps.
             Dictionary<string, string> sourceByRelativePath =
                 BuildSourceFileIndex(repoRoot);
+            // Normal map import is deterministic and uses prepared FBXs only.
+            // GR2/SPT -> FBX is intentionally manual.
+            ConversionStats conversion = new ConversionStats();
 
             string noesisPath = FindNoesis(repoRoot);
 
-            ConversionStats conversion = new ConversionStats();
-
-            if (!string.IsNullOrEmpty(noesisPath))
-            {
-                List<PropertyEntry> neededProperties = allObjects
-                    .Where(o => properties.ContainsKey(o.PropertyId))
-                    .Select(o => properties[o.PropertyId])
-                    .Where(IsGeometryProperty)
-                    .GroupBy(p => NormalizePropertySourcePath(p.SourcePath),
-                        StringComparer.OrdinalIgnoreCase)
-                    .Select(g => g.First())
-                    .ToList();
-
-                conversion = AutoConvertMissingModels(
-                    noesisPath,
-                    neededProperties,
-                    sourceByRelativePath);
-            }
-            else
-            {
-                UnityEngine.Debug.LogWarning(
-                    "Noesis.exe bulunamadı; eksik modeller dönüştürülmeyecek.");
-            }
+            UnityEngine.Debug.Log(
+                "Pyungmoo: otomatik Noesis dönüşümü KAPALI. " +
+                "Hazır FBX'ler yerleştirilecek; GR2/SPT -> FBX manuel yapılacak.");
 
             AssetDatabase.Refresh();
 
@@ -253,11 +247,16 @@ public static class Metin2PyungmooObjectImporter
             report.AppendLine($"Map root: {mapRootPath}");
             report.AppendLine($"AreaData files: {areaFiles.Count}");
             report.AppendLine($"Chunk: {chunkCount}");
-            report.AppendLine($"AreaData objesi: {allObjects.Count}");
+            report.AppendLine(
+                $"AreaData objesi: {allObjects.Count}");
+            report.AppendLine(
+                $"Unique AreaData ID: {uniqueAreaDataIds}");
             report.AppendLine(
                 $"Property eşleşmesi: {propertyMatches}");
             report.AppendLine(
                 $"Unique Property eşleşmesi: {uniquePropertyMatches}");
+            report.AppendLine(
+                $"Unique eksik Property ID: {uniqueMissingPropertyIds}");
             report.AppendLine(
                 $"Yerleştirilen: {placed}");
             report.AppendLine(
@@ -289,9 +288,11 @@ public static class Metin2PyungmooObjectImporter
 
             report.AppendLine();
             report.AppendLine(
-                $"Noesis: {(string.IsNullOrEmpty(noesisPath) ? "bulunamadı" : noesisPath)}");
+                $"Noesis bulundu: {(string.IsNullOrEmpty(noesisPath) ? "hayır" : "evet")}");
             report.AppendLine(
-                "Noesis dönüşümü: -rotate 90 0 0");
+                "Otomatik Noesis dönüşümü: KAPALI");
+            report.AppendLine(
+                "GR2/SPT -> FBX: manuel");
             report.AppendLine(
                 "Koordinat ölçeği: 50 Metin2 unit = 1 Unity metre (0.02 m/unit)");
             report.AppendLine();
@@ -338,7 +339,9 @@ public static class Metin2PyungmooObjectImporter
                 "Pyungmoo objeleri hazır",
                 $"Chunk: {chunkCount}\n" +
                 $"AreaData: {allObjects.Count}\n" +
+                $"Unique AreaData ID: {uniqueAreaDataIds}\n" +
                 $"Property eşleşmesi: {propertyMatches}\n" +
+                $"Unique eksik Property ID: {uniqueMissingPropertyIds}\n" +
                 $"Yerleştirilen: {placed}\n" +
                 $"Eksik Property: {missingProperty}\n" +
                 $"Eksik model: {missingModel}\n" +
@@ -1358,6 +1361,62 @@ public static class Metin2PyungmooObjectImporter
                     Path.GetDirectoryName(p)),
                 StringComparer.Ordinal)
             .ToList();
+    }
+
+    private static List<string> DiscoverPropertyRoots(
+        string repoRoot,
+        string primaryRoot)
+    {
+        var result =
+            new List<string>();
+
+        var seen =
+            new HashSet<string>(
+                StringComparer.OrdinalIgnoreCase);
+
+        void AddRoot(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path) ||
+                !Directory.Exists(path))
+                return;
+
+            string full =
+                Path.GetFullPath(path);
+
+            if (seen.Add(full))
+                result.Add(full);
+        }
+
+        AddRoot(primaryRoot);
+
+        string clientRoot =
+            Path.Combine(
+                repoRoot,
+                "Metin2Client");
+
+        if (Directory.Exists(clientRoot))
+        {
+            try
+            {
+                foreach (string dir in Directory.EnumerateDirectories(
+                             clientRoot,
+                             "property",
+                             SearchOption.AllDirectories))
+                {
+                    AddRoot(dir);
+                }
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"Property kökleri keşfedilirken hata: {ex.Message}");
+            }
+        }
+
+        UnityEngine.Debug.Log(
+            $"Pyungmoo Property roots: {result.Count}");
+
+        return result;
     }
 
     private static Dictionary<uint, PropertyEntry>
