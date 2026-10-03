@@ -443,6 +443,7 @@ public static class Metin2PyungmooObjectImporter
             ".pr",
             ".prb",
             ".ptr",
+            ".prt",
             ".prd",
             ".pte",
             ".pre",
@@ -475,14 +476,20 @@ public static class Metin2PyungmooObjectImporter
                 if (!idMatch.Success)
                     continue;
 
-                if (!uint.TryParse(
+                if (!ulong.TryParse(
                         idMatch.Groups[1].Value,
                         NumberStyles.None,
                         CultureInfo.InvariantCulture,
-                        out uint id))
+                        out ulong rawId))
                 {
                     continue;
                 }
+
+                // AreaData stores the object CRC as a 32-bit value.
+                // Some older .prt files in this client contain the same
+                // numeric CRC written above the uint range; normalize those
+                // values to their low 32 bits.
+                uint id = unchecked((uint)rawId);
 
                 Match propertyNameMatch =
                     Regex.Match(
