@@ -170,41 +170,36 @@ public static class Metin2PyungmooImporter
         string currentPath = null;
         float uScale = 1f;
         float vScale = 1f;
+        int numericValuesRead = 0;
 
         foreach (string rawLine in lines)
         {
             string line = rawLine.Trim();
 
-            Match start = Regex.Match(line, @"^Start Texture(\d+)$");
-            if (start.Success)
+            Match startMatch = Regex.Match(line, @"^Start Texture(\\d+)$");
+            if (startMatch.Success)
             {
-                currentId = int.Parse(start.Groups[1].Value);
+                currentId = int.Parse(startMatch.Groups[1].Value);
                 currentPath = null;
                 uScale = 1f;
                 vScale = 1f;
+                numericValuesRead = 0;
                 continue;
             }
 
             if (currentId < 0)
                 continue;
 
-            if (currentPath == null && line.StartsWith("\"") && line.EndsWith("\""))
+            if (line.StartsWith("\"") && line.EndsWith("\""))
             {
                 currentPath = line.Substring(1, line.Length - 2);
                 continue;
             }
 
-            if (currentPath != null)
+            if (line.StartsWith("End Texture", StringComparison.OrdinalIgnoreCase))
             {
-                string[] parts = line.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-                if (parts.Length >= 2 &&
-                    float.TryParse(parts[0], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out float s1) &&
-                    float.TryParse(parts[1], System.Globalization.NumberStyles.Float,
-                        System.Globalization.CultureInfo.InvariantCulture, out float s2))
+                if (!string.IsNullOrEmpty(currentPath))
                 {
-                    uScale = s1;
-                    vScale = s2;
                     result[currentId] = new TextureEntry
                     {
                         Id = currentId,
@@ -212,15 +207,40 @@ public static class Metin2PyungmooImporter
                         UScale = uScale,
                         VScale = vScale
                     };
-                    currentId = -1;
-                    currentPath = null;
                 }
+
+                currentId = -1;
+                currentPath = null;
+                numericValuesRead = 0;
+                continue;
+            }
+
+            string[] parts = line.Split(new[] { ' ', '\\t' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 1 &&
+                float.TryParse(
+                    parts[0],
+                    System.Globalization.NumberStyles.Float,
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    out float numeric))
+            {
+                // TextureSet format:
+                // line 1: texture path
+                // line 2: U scale
+                // line 3: V scale
+                // line 4+: additional flags/settings
+                if (numericValuesRead == 0)
+                    uScale = numeric;
+                else if (numericValuesRead == 1)
+                    vScale = numeric;
+
+                numericValuesRead++;
             }
         }
 
         if (result.Count == 0)
             throw new InvalidDataException("metin2_c1.txt içinden TextureSet okunamadı.");
 
+        Debug.Log($"Pyungmoo TextureSet: {result.Count} texture okundu.");
         return result;
     }
 
