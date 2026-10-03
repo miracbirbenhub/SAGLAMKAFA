@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditor.Build.Reporting;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -213,6 +214,19 @@ public static class Metin2PyungmooFinalImporter
             buildingRefs.Add(new ResolvedBuilding(obj, property, model));
         }
 
+        if (unresolvedBuildingIds.Count > 0)
+        {
+            string ids = string.Join(
+                ", ",
+                unresolvedBuildingIds.Keys
+                    .Take(30)
+                    .Select(x => x.ToString(CultureInfo.InvariantCulture)));
+
+            throw new InvalidOperationException(
+                "Building Property kayıtları bulundu fakat ilgili FBX çözülemedi. " +
+                "Property ID'leri: " + ids);
+        }
+
         if (buildingRefs.Count == 0)
         {
             string ids = string.Join(
@@ -265,7 +279,8 @@ public static class Metin2PyungmooFinalImporter
             instance.transform.SetParent(buildingRoot, false);
             instance.transform.position = new Vector3(
                 resolved.AreaObject.Position.x * AreaCoordinateScale,
-                resolved.AreaObject.Position.z * AreaCoordinateScale,
+                (resolved.AreaObject.Position.z +
+                    resolved.AreaObject.HeightOffset) * AreaCoordinateScale,
                 -resolved.AreaObject.Position.y * AreaCoordinateScale);
             instance.transform.rotation =
                 ConvertRotation(resolved.AreaObject.Rotation);
@@ -413,6 +428,16 @@ public static class Metin2PyungmooFinalImporter
                 persistedValidation);
         }
 
+        BuildValidationResult standaloneValidation =
+            RunStandaloneWindowsBuildValidation();
+
+        if (!standaloneValidation.Passed)
+        {
+            throw new InvalidOperationException(
+                "StandaloneWindows64 build doğrulaması başarısız:\n" +
+                standaloneValidation.Message);
+        }
+
         StringBuilder report = new StringBuilder();
         report.AppendLine("PYUNGMOO FINAL IMPORT / VERIFY");
         report.AppendLine(DateTime.Now.ToString(
@@ -453,6 +478,9 @@ public static class Metin2PyungmooFinalImporter
         report.AppendLine("VALIDATION");
         report.AppendLine("  Pre-save: " + validation.Replace("\n", "\n  "));
         report.AppendLine("  Post-save/reload: " + persistedValidation.Replace("\n", "\n  "));
+        report.AppendLine();
+        report.AppendLine("STANDALONE BUILD");
+        report.AppendLine("  " + standaloneValidation.Message.Replace("\n", "\n  "));
         report.AppendLine();
         report.AppendLine(
             "All 47 Building FBX assets and all 22 NPC FBX assets are serialized into the Pyungmoo scene.");
@@ -510,6 +538,108 @@ public static class Metin2PyungmooFinalImporter
         {
             throw new InvalidOperationException(
                 "Pyungmoo Build Settings GUID uyuşmazlığı.");
+        }
+    }
+
+    private sealed class BuildValidationResult
+    {
+        public readonly bool Passed;
+        public readonly string Message;
+
+        public BuildValidationResult(bool passed, string message)
+        {
+            Passed = passed;
+            Message = message;
+        }
+    }
+
+    private static BuildValidationResult RunStandaloneWindowsBuildValidation()
+    {
+        string tempRoot = Path.Combine(
+            Path.GetTempPath(),
+            "SAGLAMKAFA_Pyungmoo_BuildValidation");
+
+        try
+        {
+            if (Directory.Exists(tempRoot))
+                Directory.Delete(tempRoot, true);
+
+            Directory.CreateDirectory(tempRoot);
+
+            string buildPath = Path.Combine(
+                tempRoot,
+                "PyungmooValidation.exe");
+
+            BuildReport report = BuildPipeline.BuildPlayer(
+                new BuildPlayerOptions
+                {
+                    scenes = new[] { ScenePath },
+                    locationPathName = buildPath,
+                    target = BuildTarget.StandaloneWindows64,
+                    options = BuildOptions.StrictMode
+                });
+
+            bool passed =
+                report.summary.result == BuildResult.Succeeded &&
+                report.summary.totalErrors == 0;
+
+            StringBuilder message = new StringBuilder();
+
+            message.Append(
+                passed ? "PASS" : "FAIL");
+
+            message.Append(
+                " - result=" +
+                report.summary.result +
+                ", errors=" +
+                report.summary.totalErrors +
+                ", warnings=" +
+                report.summary.totalWarnings);
+
+            if (!passed)
+            {
+                foreach (BuildStep step in report.steps)
+                {
+                    if (step.messages == null)
+                        continue;
+
+                    foreach (BuildStepMessage buildMessage in step.messages)
+                    {
+                        if (buildMessage.type == LogType.Error ||
+                            buildMessage.type == LogType.Exception)
+                        {
+                            message.AppendLine();
+                            message.Append(
+                                "BUILD ERROR: " +
+                                buildMessage.content);
+                        }
+                    }
+                }
+            }
+
+            return new BuildValidationResult(
+                passed,
+                message.ToString());
+        }
+        catch (Exception ex)
+        {
+            return new BuildValidationResult(
+                false,
+                "FAIL - BuildPipeline exception: " + ex);
+        }
+        finally
+        {
+            try
+            {
+                if (Directory.Exists(tempRoot))
+                    Directory.Delete(tempRoot, true);
+            }
+            catch (Exception cleanupEx)
+            {
+                Debug.LogWarning(
+                    "Pyungmoo temporary build cleanup failed: " +
+                    cleanupEx.Message);
+            }
         }
     }
 
@@ -612,6 +742,13 @@ public static class Metin2PyungmooFinalImporter
 
             if (renderer.sharedMaterials.Any(x => x == null))
                 return "Null material bulundu: " + renderer.name;
+
+            if (renderer.sharedMaterials.Any(
+                    x => x != null && x.shader == null))
+                return "Shader eksik: " + renderer.name;
+
+            if (renderer.bounds.size.sqrMagnitude <= 0.000001f)
+                return "Renderer bounds boş: " + renderer.name;
         }
 
         foreach (MeshFilter filter in
@@ -675,8 +812,7 @@ public static class Metin2PyungmooFinalImporter
 
             string canonicalModelKey = ResolveC1CanonicalKey(normalized);
 
-            if (string.IsNullOrEmpty(canonicalModelKey) ||
-                !buildingCanonical.ContainsKey(canonicalModelKey))
+            if (string.IsNullOrEmpty(canonicalModelKey))
                 continue;
 
             Match idMatch = Regex.Match(
@@ -1292,6 +1428,21 @@ public static class Metin2PyungmooFinalImporter
                     "/" +
                     renderer.name);
             }
+            else if (renderer.sharedMaterials.Any(x => x.shader == null))
+            {
+                errors.Add(
+                    "Renderer contains material with missing shader: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
+            }
+
+            if (renderer.bounds.size.sqrMagnitude <= 0.000001f)
+                errors.Add(
+                    "Renderer bounds empty: " +
+                    instance.name +
+                    "/" +
+                    renderer.name);
         }
 
         foreach (MeshFilter filter in
