@@ -779,6 +779,12 @@ public static class Metin2PyungmooObjectImporter
                 Path.GetFileNameWithoutExtension(
                     sourceFile);
 
+            string dedicatedSptConverter =
+                Path.GetExtension(sourceFile)
+                    .Equals(".spt", StringComparison.OrdinalIgnoreCase)
+                    ? FindSptFbxConverter(repoRoot)
+                    : null;
+
             if (existingModels.Contains(modelName) ||
                 existingModels.Contains(modelName + "out"))
             {
@@ -835,6 +841,61 @@ public static class Metin2PyungmooObjectImporter
                     sourceFile,
                     stagedInput,
                     true);
+
+                if (!string.IsNullOrEmpty(dedicatedSptConverter))
+                {
+                    string dedicatedOutput =
+                        Path.Combine(
+                            workFolder,
+                            Path.GetFileNameWithoutExtension(
+                                stagedInput) + ".fbx");
+
+                    string dedicatedStdout;
+                    string dedicatedStderr;
+                    int dedicatedExitCode;
+
+                    if (TryRunSptFbxConverter(
+                            dedicatedSptConverter,
+                            stagedInput,
+                            dedicatedOutput,
+                            out dedicatedStdout,
+                            out dedicatedStderr,
+                            out dedicatedExitCode))
+                    {
+                        File.Copy(
+                            dedicatedOutput,
+                            outputFbx,
+                            true);
+
+                        stats.Converted++;
+
+                        try
+                        {
+                            if (Directory.Exists(workFolder))
+                                Directory.Delete(workFolder, true);
+                        }
+                        catch
+                        {
+                        }
+
+                        EditorUtility.DisplayProgressBar(
+                            "Pyungmoo modelleri",
+                            modelName,
+                            stats.Converted /
+                            (float)Math.Max(
+                                1,
+                                neededProperties.Count));
+
+                        continue;
+                    }
+
+                    UnityEngine.Debug.LogWarning(
+                        $"Özel SPT converter başarısız, Noesis fallback kullanılacak: {modelName}\n" +
+                        $"Converter={dedicatedSptConverter}\n" +
+                        $"ExitCode={dedicatedExitCode}\n" +
+                        $"STDOUT:\n{dedicatedStdout}\n" +
+                        $"STDERR:\n{dedicatedStderr}");
+                }
 
                 string[] optionSets =
                 {
@@ -1204,6 +1265,116 @@ public static class Metin2PyungmooObjectImporter
 
         result = new Vector3(x, y, z);
         return true;
+    }
+
+    private static string FindSptFbxConverter(
+        string repoRoot)
+    {
+        string userProfile =
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.UserProfile);
+
+        string oneDrive =
+            Environment.GetEnvironmentVariable(
+                "OneDrive");
+
+        var candidates =
+            new List<string>
+            {
+                Path.Combine(repoRoot, "Spt2Fbx.exe"),
+                Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt2Fbx.exe"),
+                Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt-to-FBX.exe"),
+                Path.Combine(repoRoot, "shared_3d_exporting", "Spt2Fbx.exe"),
+                Path.Combine(
+                    Directory.GetParent(repoRoot).FullName,
+                    "Spt2Fbx.exe"),
+                Path.Combine(
+                    Directory.GetParent(repoRoot).FullName,
+                    "SPT-to-FBX-Converter",
+                    "Spt2Fbx.exe"),
+                Path.Combine(userProfile, "Desktop", "Spt2Fbx.exe"),
+                Path.Combine(userProfile, "Downloads", "Spt2Fbx.exe")
+            };
+
+        if (!string.IsNullOrEmpty(oneDrive))
+        {
+            candidates.Add(
+                Path.Combine(
+                    oneDrive,
+                    "Desktop",
+                    "Spt2Fbx.exe"));
+
+            candidates.Add(
+                Path.Combine(
+                    oneDrive,
+                    "Desktop",
+                    "SPT-to-FBX-Converter",
+                    "Spt2Fbx.exe"));
+        }
+
+        return candidates
+            .Where(File.Exists)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
+    }
+
+    private static bool TryRunSptFbxConverter(
+        string converterPath,
+        string inputSpt,
+        string outputFbx,
+        out string stdout,
+        out string stderr,
+        out int exitCode)
+    {
+        stdout = string.Empty;
+        stderr = string.Empty;
+        exitCode = -1;
+
+        string arguments =
+            $"\"{inputSpt}\"";
+
+        try
+        {
+            using (Process process = new Process())
+            {
+                process.StartInfo =
+                    new ProcessStartInfo
+                    {
+                        FileName = converterPath,
+                        Arguments = arguments,
+                        WorkingDirectory =
+                            Path.GetDirectoryName(converterPath),
+                        UseShellExecute = false,
+                        CreateNoWindow = true,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true
+                    };
+
+                process.Start();
+
+                if (!process.WaitForExit(NoesisTimeoutMs))
+                {
+                    try { process.Kill(); }
+                    catch { }
+
+                    stderr = "SPT converter timeout.";
+                    return false;
+                }
+
+                exitCode = process.ExitCode;
+                stdout = process.StandardOutput.ReadToEnd();
+                stderr = process.StandardError.ReadToEnd();
+
+                return exitCode == 0 &&
+                       File.Exists(outputFbx) &&
+                       new FileInfo(outputFbx).Length > 0;
+            }
+        }
+        catch (Exception ex)
+        {
+            stderr = ex.ToString();
+            return false;
+        }
     }
 
     private static Quaternion ConvertRotation(
