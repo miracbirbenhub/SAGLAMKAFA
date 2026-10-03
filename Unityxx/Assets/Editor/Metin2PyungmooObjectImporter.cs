@@ -211,7 +211,19 @@ public static class Metin2PyungmooObjectImporter
     private static Dictionary<uint, PropertyEntry> LoadProperties(string root)
     {
         var result = new Dictionary<uint, PropertyEntry>();
-        string[] files = Directory.GetFiles(root, "*.prb", SearchOption.AllDirectories);
+        string[] files = Directory.GetFiles(root, "*.*", SearchOption.AllDirectories)
+            .Where(f =>
+            {
+                string ext = Path.GetExtension(f);
+                return ext.Equals(".pr", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".prb", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".prd", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".prt", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".pte", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".pre", StringComparison.OrdinalIgnoreCase) ||
+                       ext.Equals(".pra", StringComparison.OrdinalIgnoreCase);
+            })
+            .ToArray();
 
         foreach (string file in files)
         {
@@ -239,14 +251,14 @@ public static class Metin2PyungmooObjectImporter
                     ? nameMatch.Groups[1].Value
                     : Path.GetFileNameWithoutExtension(file);
 
-                Match buildingMatch = Regex.Match(
+                Match modelMatch = Regex.Match(
                     text,
-                    @"(?mi)^\s*(?:buildingfile|dungeonblockfile)\s+""([^""]+\.gr2)""");
+                    @"(?mi)^\s*(?:buildingfile|dungeonblockfile|treefile|effectfile)\s+""([^""]+\.(?:gr2|spt|mse))""");
 
                 string modelKey = null;
-                if (buildingMatch.Success)
+                if (modelMatch.Success)
                     modelKey = Path.GetFileNameWithoutExtension(
-                        buildingMatch.Groups[1].Value.Replace('\\', '/'));
+                        modelMatch.Groups[1].Value.Replace('\\', '/'));
 
                 var entry = new PropertyEntry
                 {
@@ -270,7 +282,7 @@ public static class Metin2PyungmooObjectImporter
             }
         }
 
-        Debug.Log($"Pyungmoo Property index: {result.Count} ID");
+        Debug.Log($"Pyungmoo Property index: {result.Count} ID (pr/prb/prd/prt/pte/pre/pra)");
         return result;
     }
 
@@ -279,11 +291,17 @@ public static class Metin2PyungmooObjectImporter
         string path = entry.SourcePath.Replace('\\', '/').ToLowerInvariant();
         int score = 0;
 
-        if (path.Contains("/property/b/"))
-            score += 100;
-
         if (path.Contains("/property/c/"))
+            score += 100;
+        else if (path.Contains("/property/b/"))
             score += 90;
+
+        if (path.EndsWith(".prb"))
+            score += 20;
+        else if (path.EndsWith(".prd"))
+            score += 15;
+        else if (path.EndsWith(".prt"))
+            score += 10;
 
         if (path.Contains("/ghost/"))
             score -= 50;
