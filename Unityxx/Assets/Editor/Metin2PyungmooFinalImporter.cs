@@ -1290,6 +1290,29 @@ public static class Metin2PyungmooFinalImporter
         return false;
     }
 
+    private static bool TryParseUInt32Token(string token, out uint value)
+    {
+        if (uint.TryParse(
+                token,
+                NumberStyles.None,
+                CultureInfo.InvariantCulture,
+                out value))
+            return true;
+
+        if (long.TryParse(
+                token,
+                NumberStyles.Integer,
+                CultureInfo.InvariantCulture,
+                out long signed))
+        {
+            value = unchecked((uint)signed);
+            return true;
+        }
+
+        value = 0u;
+        return false;
+    }
+
     private static Vector3 ParseVector3(string line)
     {
         string[] parts =
@@ -1364,18 +1387,11 @@ public static class Metin2PyungmooFinalImporter
 
             Vector3 position = ParseVector3(data[0]);
 
-            if (!uint.TryParse(
-                    data[1],
-                    NumberStyles.None,
-                    CultureInfo.InvariantCulture,
-                    out uint propertyId))
-            {
-                propertyId = unchecked((uint)(
-                    ulong.Parse(
-                        data[1],
-                        NumberStyles.None,
-                        CultureInfo.InvariantCulture)));
-            }
+            uint propertyId;
+            if (!TryParseUInt32Token(data[1], out propertyId))
+                throw new InvalidDataException(
+                    file + " Object" + objectIndex +
+                    " Property/CRC32 değeri bozuk: " + data[1]);
 
             string rotationLine = data[2];
             string[] rotationParts = rotationLine.Split(
