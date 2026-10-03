@@ -1259,7 +1259,7 @@ public static class Metin2PyungmooFinalImporter
     private static void WriteReport(string text)
     {
         string absolute =
-            Path.Combine(Application.dataPath, "..", ReportPath.Substring("Assets/".Length));
+            Path.Combine(Application.dataPath, ReportPath.Substring("Assets/".Length));
 
         string directory = Path.GetDirectoryName(absolute);
         if (!string.IsNullOrEmpty(directory))
