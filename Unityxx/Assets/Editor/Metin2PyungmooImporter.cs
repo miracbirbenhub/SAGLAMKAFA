@@ -250,7 +250,7 @@ public static class Metin2PyungmooImporter
     {
         string assetsRoot = Application.dataPath;
         string projectRoot = Directory.GetParent(assetsRoot).FullName;
-        string repoRoot = projectRoot;
+        string repoRoot = Directory.GetParent(projectRoot).FullName;
 
         string textureOutput = Path.Combine(
             assetsRoot, "Metin2Generated", "Pyungmoo", "Textures");
