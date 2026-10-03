@@ -427,8 +427,8 @@ public static class Metin2PyungmooIntegrationValidator
             rendererless);
 
         result.Check(
-            physicalFbx.Length > 0,
-            "Building klasöründe FBX mevcut.");
+            physicalFbx.Length == 47,
+            $"Building FBX envanteri tam 47 adet ({physicalFbx.Length}).");
 
         result.Check(
             physicalFbx.Length == referenced.Count,
@@ -591,12 +591,12 @@ public static class Metin2PyungmooIntegrationValidator
         result.AddMetric("NPC unique VNUM", vnums.Count);
 
         result.Check(
-            physicalFbx.Length > 0,
-            "NPC klasöründe FBX mevcut.");
+            physicalFbx.Length == 22,
+            $"NPC FBX envanteri tam 22 adet ({physicalFbx.Length}).");
 
         result.Check(
-            identityCount > 0,
-            "Sahnede gerçek NPC identity kayıtları mevcut.");
+            identityCount == 31,
+            $"C1 NPC placement katmanı beklenen 31 kayıt içeriyor ({identityCount}).");
 
         result.Check(
             placeholderCount == 0,
