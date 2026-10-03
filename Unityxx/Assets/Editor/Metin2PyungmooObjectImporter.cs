@@ -415,6 +415,9 @@ public static class Metin2PyungmooObjectImporter
             Dictionary<string, GameObject> buildingModels =
                 BuildBuildingModelIndex(buildingFolder);
 
+            UnityEngine.Debug.Log(
+                $"Pyungmoo existing Building model index: {buildingModels.Count} model");
+
             int buildingProperties = 0;
             int placed = 0;
             int missingProperty = 0;
@@ -597,32 +600,127 @@ public static class Metin2PyungmooObjectImporter
             new Dictionary<string, GameObject>(
                 StringComparer.OrdinalIgnoreCase);
 
-        foreach (string guid in
-                 AssetDatabase.FindAssets(
-                     "t:Model",
-                     new[] { folder })
-                 .OrderBy(g => g, StringComparer.Ordinal))
+        string projectRoot =
+            Directory.GetParent(Application.dataPath).FullName;
+
+        string absoluteFolder =
+            Path.Combine(
+                projectRoot,
+                folder.Substring("Assets/".Length)
+                    .Replace(
+                        '/',
+                        Path.DirectorySeparatorChar));
+
+        if (!Directory.Exists(absoluteFolder))
         {
-            string path =
-                AssetDatabase.GUIDToAssetPath(guid);
-
-            string name =
-                Path.GetFileNameWithoutExtension(path);
-
-            if (string.IsNullOrWhiteSpace(name))
-                continue;
-
-            GameObject prefab =
-                AssetDatabase.LoadAssetAtPath<GameObject>(path);
-
-            if (prefab == null)
-                continue;
-
-            if (!result.ContainsKey(name))
-                result.Add(name, prefab);
+            UnityEngine.Debug.LogWarning(
+                $"Building FBX klasörü bulunamadı: {absoluteFolder}");
+            return result;
         }
 
+        string[] files =
+            Directory.GetFiles(
+                absoluteFolder,
+                "*.fbx",
+                SearchOption.AllDirectories);
+
+        foreach (string file in files.OrderBy(
+                     p => p,
+                     StringComparer.OrdinalIgnoreCase))
+        {
+            string assetPath =
+                "Assets/" +
+                Path.GetRelativePath(
+                    Path.Combine(
+                        projectRoot,
+                        "Assets"),
+                    file)
+                .Replace('\\', '/');
+
+            // Git pull sonrası importer henüz çalışmadıysa bile FBX'i
+            // senkron olarak içeri alıp hemen kullanabil.
+            AssetDatabase.ImportAsset(
+                assetPath,
+                ImportAssetOptions.ForceSynchronousImport);
+
+            GameObject prefab =
+                AssetDatabase.LoadAssetAtPath<GameObject>(
+                    assetPath);
+
+            if (prefab == null)
+            {
+                UnityEngine.Debug.LogWarning(
+                    $"Building FBX Unity model olarak yüklenemedi: {assetPath}");
+                continue;
+            }
+
+            string name =
+                Path.GetFileNameWithoutExtension(file);
+
+            AddBuildingModelAlias(
+                result,
+                name,
+                prefab);
+
+            string normalized =
+                NormalizeBuildingModelName(name);
+
+            if (!string.IsNullOrEmpty(normalized))
+                AddBuildingModelAlias(
+                    result,
+                    normalized,
+                    prefab);
+        }
+
+        UnityEngine.Debug.Log(
+            $"Existing Building FBX index: {result.Count} alias");
+
         return result;
+    }
+
+    private static void AddBuildingModelAlias(
+        Dictionary<string, GameObject> result,
+        string name,
+        GameObject prefab)
+    {
+        if (string.IsNullOrWhiteSpace(name) ||
+            prefab == null)
+            return;
+
+        if (!result.ContainsKey(name))
+            result.Add(name, prefab);
+    }
+
+    private static string NormalizeBuildingModelName(
+        string name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        string value = name.Trim();
+
+        value = Regex.Replace(
+            value,
+            @"_lod_\\d+out$",
+            string.Empty,
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant);
+
+        value = Regex.Replace(
+            value,
+            @"_lod_\\d+$",
+            string.Empty,
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant);
+
+        value = Regex.Replace(
+            value,
+            @"out$",
+            string.Empty,
+            RegexOptions.IgnoreCase |
+            RegexOptions.CultureInvariant);
+
+        return value;
     }
 
     private static bool TryFindBuildingModel(
@@ -630,13 +728,30 @@ public static class Metin2PyungmooObjectImporter
         string modelName,
         out GameObject model)
     {
-        if (modelIndex.TryGetValue(modelName, out model))
+        if (modelIndex.TryGetValue(
+                modelName,
+                out model))
+        {
             return true;
+        }
+
+        string normalized =
+            NormalizeBuildingModelName(modelName);
+
+        if (!string.IsNullOrEmpty(normalized) &&
+            modelIndex.TryGetValue(
+                normalized,
+                out model))
+        {
+            return true;
+        }
 
         if (modelIndex.TryGetValue(
                 modelName + "out",
                 out model))
+        {
             return true;
+        }
 
         model = null;
         return false;
