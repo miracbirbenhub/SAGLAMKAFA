@@ -70,7 +70,9 @@ public static class Metin2PyungmooNpcImporter
 
     [MenuItem("Metin2/Pyungmoo/Import Village NPCs")]
     public static void ImportVillageNpcs()
+public static bool LastImportSucceeded { get; private set; }
     {
+        LastImportSucceeded = false;
         try
         {
             if (!File.Exists(Path.Combine(Application.dataPath, "Scenes", "Pyungmoo.unity")))
@@ -146,6 +148,8 @@ public static class Metin2PyungmooNpcImporter
 
             Selection.activeGameObject = npcRoot.gameObject;
 
+            LastImportSucceeded = true;
+
             EditorUtility.DisplayDialog(
                 "Pyungmoo NPC yerleşimi hazır",
                 $"NPC kaydı: {Placements.Length}\n" +
@@ -157,6 +161,7 @@ public static class Metin2PyungmooNpcImporter
         }
         catch (Exception ex)
         {
+            LastImportSucceeded = false;
             Debug.LogException(ex);
             EditorUtility.DisplayDialog("NPC import hatası", ex.Message, "Tamam");
         }
