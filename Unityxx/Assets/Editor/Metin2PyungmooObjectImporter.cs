@@ -416,13 +416,26 @@ public static class Metin2PyungmooObjectImporter
             return false;
         }
 
-        bool ok =
-            float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float x) &&
-            float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y) &&
-            float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float z);
+        if (!float.TryParse(parts[0], NumberStyles.Float, CultureInfo.InvariantCulture, out float x))
+        {
+            result = Vector3.zero;
+            return false;
+        }
 
-        result = ok ? new Vector3(x, y, z) : Vector3.zero;
-        return ok;
+        if (!float.TryParse(parts[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float y))
+        {
+            result = Vector3.zero;
+            return false;
+        }
+
+        if (!float.TryParse(parts[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float z))
+        {
+            result = Vector3.zero;
+            return false;
+        }
+
+        result = new Vector3(x, y, z);
+        return true;
     }
 
     private static Vector3 ConvertPosition(AreaObject areaObject)
