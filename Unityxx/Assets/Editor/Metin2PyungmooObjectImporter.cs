@@ -457,12 +457,10 @@ public static class Metin2PyungmooObjectImporter
             ".prb",
             ".prt",
             ".ptr",
-            ".prt",
             ".prd",
             ".pte",
             ".pre",
-            ".pra",
-            ".prt"
+            ".pra"
         };
 
         IEnumerable<string> files =
