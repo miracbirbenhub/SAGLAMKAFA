@@ -1,0 +1,2554 @@
+Pyungmoo Object Import Report
+2026-10-03 20:24:45
+
+Map root: C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\OutdoorC1\metin2_map_c1
+AreaData files: 20
+Chunk: 20
+AreaData objesi: 1748
+Property eşleşmesi: 661
+Unique Property eşleşmesi: 104
+Yerleştirilen: 0
+Eksik Property: 1087
+Eksik model/FBX: 652
+Desteklenmeyen Property türü: 9
+Yeni FBX: 0
+Mevcut model: 0
+Kaynak bulunamadı: 2
+Noesis hatası: 98
+
+Noesis hata detayları:
+FAILED: b1_pagodatree_rt3
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_pagodatree_rt3.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt3_70baf8023411483dba18917bb4f3991e\b1_pagodatree_rt3.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt3_70baf8023411483dba18917bb4f3991e\b1_pagodatree_rt3.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_montereycypress_rt4
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_montereycypress_rt4.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt4_5a5fb260df504ff79c5da12aa56d0e9f\b1_montereycypress_rt4.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt4_5a5fb260df504ff79c5da12aa56d0e9f\b1_montereycypress_rt4.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: warpgate03_01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\warpgate03_01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate03_01_28ef57c01cbe493f92e83336edfeeb87\warpgate03_01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate03_01_28ef57c01cbe493f92e83336edfeeb87\warpgate03_01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_montereycypress_rt5
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_montereycypress_rt5.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt5_d99813e0b35f4bae960273836f69ab8f\b1_montereycypress_rt5.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt5_d99813e0b35f4bae960273836f69ab8f\b1_montereycypress_rt5.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_sassafras_rt_fall
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_sassafras_rt_fall.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_sassafras_rt_fall_009d061c586940a89628ad9878ac0f83\b1_sassafras_rt_fall.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_sassafras_rt_fall_009d061c586940a89628ad9878ac0f83\b1_sassafras_rt_fall.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: warpgate03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\warpgate03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate03_f8e8df19ca974addbed3d884320acf0d\warpgate03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate03_f8e8df19ca974addbed3d884320acf0d\warpgate03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_montereycypress_rt3
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_montereycypress_rt3.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt3_36c963486d7c4d23928fd433ef1d0756\b1_montereycypress_rt3.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt3_36c963486d7c4d23928fd433ef1d0756\b1_montereycypress_rt3.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_montereycypress_rt2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_montereycypress_rt2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt2_3bc728f0159b4bbeac8778d4ecc23757\b1_montereycypress_rt2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt2_3bc728f0159b4bbeac8778d4ecc23757\b1_montereycypress_rt2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_pagodatree_rt
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_pagodatree_rt.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt_8a5e68e731e747888ec89560e053dde8\b1_pagodatree_rt.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt_8a5e68e731e747888ec89560e053dde8\b1_pagodatree_rt.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_suspension bridge02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_suspension bridge02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_suspension_bridge02_7a7c5e2e308c42229ec9f2cb3fa66e9c\general_obj_suspension bridge02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_suspension_bridge02_7a7c5e2e308c42229ec9f2cb3fa66e9c\general_obj_suspension_bridge02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_beech_rt
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_beech_rt.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt_67f4f61564974e4fa8d95185d773cbcd\b1_beech_rt.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt_67f4f61564974e4fa8d95185d773cbcd\b1_beech_rt.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_montereycypress_rt
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_montereycypress_rt.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt_45c8ec4fb5fa4dc9bfed23bcd39366e9\b1_montereycypress_rt.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_montereycypress_rt_45c8ec4fb5fa4dc9bfed23bcd39366e9\b1_montereycypress_rt.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_pagodatree_rt2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_pagodatree_rt2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt2_9a4eeb8be72f4cb0bd206855ec661173\b1_pagodatree_rt2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_pagodatree_rt2_9a4eeb8be72f4cb0bd206855ec661173\b1_pagodatree_rt2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_bigstone10
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_bigstone10.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_bigstone10_531159b7b5d049d7bbf2dca8b09e1459\general_obj_bigstone10.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_bigstone10_531159b7b5d049d7bbf2dca8b09e1459\general_obj_bigstone10.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_beech_rt2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_beech_rt2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt2_7a29f7c2b040496aa55a31ce9cad15eb\b1_beech_rt2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt2_7a29f7c2b040496aa55a31ce9cad15eb\b1_beech_rt2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone09
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone09.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone09_d8a44f6bc2974a139e71207727708f03\general_obj_stone09.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone09_d8a44f6bc2974a139e71207727708f03\general_obj_stone09.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone11
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone11.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone11_d189d8ddedcd4b6faa65707a6376c5ee\general_obj_stone11.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone11_d189d8ddedcd4b6faa65707a6376c5ee\general_obj_stone11.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone13
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone13.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone13_b76e06066047480cb1ba0378a5504964\general_obj_stone13.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone13_b76e06066047480cb1ba0378a5504964\general_obj_stone13.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b3_beech_rt3
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b3_beech_rt3.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b3_beech_rt3_62a9d0c9e1fb4c0b9af7b7935b1493b0\b3_beech_rt3.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b3_beech_rt3_62a9d0c9e1fb4c0b9af7b7935b1493b0\b3_beech_rt3.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_beech_rt4
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_beech_rt4.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt4_6dfe3b177ca64eb19a2c4942af4f1c2b\b1_beech_rt4.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_beech_rt4_6dfe3b177ca64eb19a2c4942af4f1c2b\b1_beech_rt4.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_sassafras_rt_fall2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_sassafras_rt_fall2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_sassafras_rt_fall2_93b320bce29842c2a79ff35fcb76eb18\b1_sassafras_rt_fall2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_sassafras_rt_fall2_93b320bce29842c2a79ff35fcb76eb18\b1_sassafras_rt_fall2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone03_f16941f295134953bce5cd740dfe5461\general_obj_stone03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone03_f16941f295134953bce5cd740dfe5461\general_obj_stone03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_bigstonegate01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_bigstonegate01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_bigstonegate01_b5d77a817e4542cb8ae81aaab3f37977\general_obj_bigstonegate01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_bigstonegate01_b5d77a817e4542cb8ae81aaab3f37977\general_obj_bigstonegate01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_tent01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_tent01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_tent01_e283438d263444adbc36404fef69f880\general_obj_tent01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_tent01_e283438d263444adbc36404fef69f880\general_obj_tent01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_23
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_23.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_23_4c4b83d477f7415bbc6b299b70b1d428\b_general_obj_23.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_23_4c4b83d477f7415bbc6b299b70b1d428\b_general_obj_23.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: ob-b1-006-woodbarrel
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\ob-b1-006-woodbarrel.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-006-woodbarrel_71f0da0ac3d04793b02aa89802f78936\ob-b1-006-woodbarrel.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-006-woodbarrel_71f0da0ac3d04793b02aa89802f78936\ob-b1-006-woodbarrel.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence03_41c0da2415bd4c7e9398fbc042b31735\general_obj_fence03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence03_41c0da2415bd4c7e9398fbc042b31735\general_obj_fence03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_42
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_42.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_42_e59d16216f3649c18ee7fdba7d13f424\b_general_obj_42.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_42_e59d16216f3649c18ee7fdba7d13f424\b_general_obj_42.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_41
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_41.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_41_6a5739afc63841d88fc82d1083be0111\b_general_obj_41.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_41_6a5739afc63841d88fc82d1083be0111\b_general_obj_41.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_25
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_25.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25_9b403df4ed02434dbd088179554ab2ed\b_general_obj_25.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25_9b403df4ed02434dbd088179554ab2ed\b_general_obj_25.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_yellow01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_yellow01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_yellow01_3685a27e5f0d470fa494901b070b7070\general_obj_jar_yellow01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_yellow01_3685a27e5f0d470fa494901b070b7070\general_obj_jar_yellow01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_21
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_21.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_21_0d39f4b7ee1244b09838a539e3850fdd\b_general_obj_21.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_21_0d39f4b7ee1244b09838a539e3850fdd\b_general_obj_21.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: ob-b1-001-box02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\ob-b1-001-box02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box02_1616fa39e30b4dc58e4d5257a6d18bed\ob-b1-001-box02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box02_1616fa39e30b4dc58e4d5257a6d18bed\ob-b1-001-box02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_27
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_27.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_27_9ead8c4213f3467eba6e2c810f3cde58\b_general_obj_27.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_27_9ead8c4213f3467eba6e2c810f3cde58\b_general_obj_27.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: obj-0006
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\obj-0006.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0006_e9c3645ddd8e454296492b6ccc94445b\obj-0006.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0006_e9c3645ddd8e454296492b6ccc94445b\obj-0006.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_28
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_28.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_28_6d7c3158ff56457381e8a21fa640670f\b_general_obj_28.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_28_6d7c3158ff56457381e8a21fa640670f\b_general_obj_28.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: ob-b1-001-box01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\ob-b1-001-box01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box01_c5dfb30ff46e4875a500eddbfb5d9d6b\ob-b1-001-box01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box01_c5dfb30ff46e4875a500eddbfb5d9d6b\ob-b1-001-box01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence01_085cd92f9cab4b24ac5e99ea2cc3b694\general_obj_fence01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence01_085cd92f9cab4b24ac5e99ea2cc3b694\general_obj_fence01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_22
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_22.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_22_1674b09ebf4048fdba9c57cd9a95f2e7\b_general_obj_22.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_22_1674b09ebf4048fdba9c57cd9a95f2e7\b_general_obj_22.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_02_0007f5e0ffe34330a64aff612f9596df\b_general_obj_02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_02_0007f5e0ffe34330a64aff612f9596df\b_general_obj_02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence02_74c65e8e8a794271b8a8cd1ef3fbc112\general_obj_fence02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence02_74c65e8e8a794271b8a8cd1ef3fbc112\general_obj_fence02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_carriage
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_carriage.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_carriage_dee51fa7addf4299a320241bb8340d31\general_obj_carriage.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_carriage_dee51fa7addf4299a320241bb8340d31\general_obj_carriage.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_yellow02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_yellow02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_yellow02_104d72d61b494b78b99d301826f9f6aa\general_obj_jar_yellow02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_yellow02_104d72d61b494b78b99d301826f9f6aa\general_obj_jar_yellow02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_10
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_10.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_10_278bb5682ae64915be54d02b8eabcd13\b_general_obj_10.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_10_278bb5682ae64915be54d02b8eabcd13\b_general_obj_10.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_blue01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_blue01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_blue01_20a972a15939427db478f358308a2795\general_obj_jar_blue01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_blue01_20a972a15939427db478f358308a2795\general_obj_jar_blue01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_blue02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_blue02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_blue02_b7f03b92571e4c1fb519baaa04552ec8\general_obj_jar_blue02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_blue02_b7f03b92571e4c1fb519baaa04552ec8\general_obj_jar_blue02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_flag
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_flag.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_flag_b74dd1dab4f644268e31d048109344ce\general_obj_flag.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_flag_b74dd1dab4f644268e31d048109344ce\general_obj_flag.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence04
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence04.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence04_0c838b86670f49dfa39268f12c40247a\general_obj_fence04.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence04_0c838b86670f49dfa39268f12c40247a\general_obj_fence04.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_woodbox
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_woodbox.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodbox_c5e12d2ec3cf4636b795a492703eec5c\general_obj_woodbox.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodbox_c5e12d2ec3cf4636b795a492703eec5c\general_obj_woodbox.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone07
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone07.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone07_95945dcdb4204cb495c5793248a55ad9\general_obj_stone07.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone07_95945dcdb4204cb495c5793248a55ad9\general_obj_stone07.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone02_ef1484b66fc946209661af26d69607be\general_obj_stone02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone02_ef1484b66fc946209661af26d69607be\general_obj_stone02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_woodchair
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_woodchair.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodchair_112c6328efaa4771afb5be25e54e97ae\general_obj_woodchair.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodchair_112c6328efaa4771afb5be25e54e97ae\general_obj_woodchair.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone08
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone08.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone08_9c148d54188c4b4d9f47ba92d2013826\general_obj_stone08.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone08_9c148d54188c4b4d9f47ba92d2013826\general_obj_stone08.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_07
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_07.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_07_40beb228996b40518cb175e2a65cc37c\b_general_obj_07.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_07_40beb228996b40518cb175e2a65cc37c\b_general_obj_07.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stone01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stone01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone01_0b502f2165f9444db2653913bee90eab\general_obj_stone01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stone01_0b502f2165f9444db2653913bee90eab\general_obj_stone01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_tent02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_tent02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_tent02_8e6503d037a246ed8eedb101fea6d934\general_obj_tent02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_tent02_8e6503d037a246ed8eedb101fea6d934\general_obj_tent02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: ob-b1-001-box03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\ob-b1-001-box03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box03_c6896c4a779a42e387f62f97e6186b9d\ob-b1-001-box03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\ob-b1-001-box03_c6896c4a779a42e387f62f97e6186b9d\ob-b1-001-box03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_05
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_05.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_05_454a9dd567524f559a4586de3f59ba3b\b_general_obj_05.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_05_454a9dd567524f559a4586de3f59ba3b\b_general_obj_05.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_woodbed
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_woodbed.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodbed_ecd724bfa79f48319db0bc01608cfc71\general_obj_woodbed.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_woodbed_ecd724bfa79f48319db0bc01608cfc71\general_obj_woodbed.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1-001-house3
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\building\b1-001-house3.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1-001-house3_889c2a2e79a9434fbdaad776f71acf3e\b1-001-house3.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1-001-house3_889c2a2e79a9434fbdaad776f71acf3e\b1-001-house3.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: warpgate02_01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\warpgate02_01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate02_01_a6e352a916c94de89840de3727eda169\warpgate02_01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\warpgate02_01_a6e352a916c94de89840de3727eda169\warpgate02_01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_red01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_red01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_red01_551403b9560f460f908f6c650dc78651\general_obj_jar_red01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_red01_551403b9560f460f908f6c650dc78651\general_obj_jar_red01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_13
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_13.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_13_df255817cb4d4b18a3626f1039ea8871\b_general_obj_13.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_13_df255817cb4d4b18a3626f1039ea8871\b_general_obj_13.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_jar_red02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_jar_red02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_red02_9305fb92bac34d128fa71da4b63d4489\general_obj_jar_red02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_jar_red02_9305fb92bac34d128fa71da4b63d4489\general_obj_jar_red02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: obj-0003
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\obj-0003.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0003_7791587dcdf14a329e06380434552a4f\obj-0003.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0003_7791587dcdf14a329e06380434552a4f\obj-0003.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: obj-0002
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\obj-0002.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0002_a435023fecdf48b09bd1610ef84c6880\obj-0002.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\obj-0002_a435023fecdf48b09bd1610ef84c6880\obj-0002.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_stonepillar_01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_stonepillar_01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stonepillar_01_77554d2ac1444ffca98e9ed012e44725\general_obj_stonepillar_01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_stonepillar_01_77554d2ac1444ffca98e9ed012e44725\general_obj_stonepillar_01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_baobab_rt
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_baobab_rt.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_baobab_rt_29193eb6c40244c49674e357de4043fb\b1_baobab_rt.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_baobab_rt_29193eb6c40244c49674e357de4043fb\b1_baobab_rt.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_drum
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_drum.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_drum_f815b4babce241bfb85b42e1ddcab24c\general_obj_drum.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_drum_f815b4babce241bfb85b42e1ddcab24c\general_obj_drum.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: landmark_statuestone
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\landmark_statuestone.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\landmark_statuestone_8dd4bb60cde34f6fa08545570ba4c4ef\landmark_statuestone.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\landmark_statuestone_8dd4bb60cde34f6fa08545570ba4c4ef\landmark_statuestone.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_38
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_38.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_38_9ea3381c1970462c8d749a64166590c2\b_general_obj_38.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_38_9ea3381c1970462c8d749a64166590c2\b_general_obj_38.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_charcoal
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_charcoal.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_charcoal_d6ef3ffd9ebb42b6b6f668c585fc9b63\general_obj_charcoal.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_charcoal_d6ef3ffd9ebb42b6b6f668c585fc9b63\general_obj_charcoal.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_26
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_26.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_26_7e0330ed857e4edaac37aa77978342de\b_general_obj_26.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_26_7e0330ed857e4edaac37aa77978342de\b_general_obj_26.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_01_1
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_01_1.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_01_1_44ff7c8cf7cc4567b3310f0e00e8a084\b_general_obj_01_1.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_01_1_44ff7c8cf7cc4567b3310f0e00e8a084\b_general_obj_01_1.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_itembox02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_itembox02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_itembox02_d4b4beb0c1ff44e7bf76a39fd3ed2e88\general_obj_itembox02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_itembox02_d4b4beb0c1ff44e7bf76a39fd3ed2e88\general_obj_itembox02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_40
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_40.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_40_c96f17f249df40dbadbc44c721858646\b_general_obj_40.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_40_c96f17f249df40dbadbc44c721858646\b_general_obj_40.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence06
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence06.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence06_dfd24e1be7e14b36ac5289e210a37c1b\general_obj_fence06.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence06_dfd24e1be7e14b36ac5289e210a37c1b\general_obj_fence06.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_24
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_24.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_24_6a40979692c64076a583117e05f64e7f\b_general_obj_24.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_24_6a40979692c64076a583117e05f64e7f\b_general_obj_24.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_fence05
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_fence05.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence05_19f6959ef90a4b7ea43a8cea9f99c357\general_obj_fence05.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_fence05_19f6959ef90a4b7ea43a8cea9f99c357\general_obj_fence05.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: hay_01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\hay_01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\hay_01_a9424c27c5994192a61e8f6cc5546558\hay_01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\hay_01_a9424c27c5994192a61e8f6cc5546558\hay_01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_campfire
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_campfire.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_campfire_f89ade91886242f69f5da20f4c029f39\general_obj_campfire.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_campfire_f89ade91886242f69f5da20f4c029f39\general_obj_campfire.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_37
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_37.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_37_d6409a077f8f41a89a5c5c1fdcaa10fc\b_general_obj_37.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_37_d6409a077f8f41a89a5c5c1fdcaa10fc\b_general_obj_37.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_33
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_33.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_33_5965c6950def46d08ee6145fd54d1b53\b_general_obj_33.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_33_5965c6950def46d08ee6145fd54d1b53\b_general_obj_33.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_04
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_04.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_04_c921102bee6a4352a4d206e7513bd7e4\b_general_obj_04.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_04_c921102bee6a4352a4d206e7513bd7e4\b_general_obj_04.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_03_5bb820873e584d8496871d80f877b525\b_general_obj_03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_03_5bb820873e584d8496871d80f877b525\b_general_obj_03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_06
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_06.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_06_45c080434b89434887b9cec73e888ec7\b_general_obj_06.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_06_45c080434b89434887b9cec73e888ec7\b_general_obj_06.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_ferryboat01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_ferryboat01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat01_e51ad6517bc1429e9acd515168f3e1be\general_obj_ferryboat01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat01_e51ad6517bc1429e9acd515168f3e1be\general_obj_ferryboat01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_01_ae7aa5a6e70c4826a4b3e965ab3c995e\b_general_obj_01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_01_ae7aa5a6e70c4826a4b3e965ab3c995e\b_general_obj_01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_25-2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_25-2.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25-2_22f89dc90e3d406cbc2c74b7fdd8fd95\b_general_obj_25-2.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25-2_22f89dc90e3d406cbc2c74b7fdd8fd95\b_general_obj_25-2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_21_1
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_21_1.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_21_1_3567c5177be94c769da1addb1e189ed5\b_general_obj_21_1.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_21_1_3567c5177be94c769da1addb1e189ed5\b_general_obj_21_1.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_ferryboat03
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_ferryboat03.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat03_f7202230dbbb426c81099cae6cdf921c\general_obj_ferryboat03.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat03_f7202230dbbb426c81099cae6cdf921c\general_obj_ferryboat03.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_txtstone
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_txtstone.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_txtstone_cccd85cb8fa143cebd5f93c932ce7993\general_obj_txtstone.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_txtstone_cccd85cb8fa143cebd5f93c932ce7993\general_obj_txtstone.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_14
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_14.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_14_9cd9293dc46a406aa473947924e59c6d\b_general_obj_14.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_14_9cd9293dc46a406aa473947924e59c6d\b_general_obj_14.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_suspension bridge01
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_suspension bridge01.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_suspension_bridge01_6ed7cb0585264e0e8e8d2ef135c1385b\general_obj_suspension bridge01.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_suspension_bridge01_6ed7cb0585264e0e8e8d2ef135c1385b\general_obj_suspension_bridge01.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b3_shingleoak_rt2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b3_shingleoak_rt2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b3_shingleoak_rt2_f9da6de4268840598e99d4279cf96ecb\b3_shingleoak_rt2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b3_shingleoak_rt2_f9da6de4268840598e99d4279cf96ecb\b3_shingleoak_rt2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b1_baobab_rt2
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Tree\ymir work\tree\b1_baobab_rt2.spt
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_baobab_rt2_6cc0c238d18e41a4abaec3630de61b22\b1_baobab_rt2.spt
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b1_baobab_rt2_6cc0c238d18e41a4abaec3630de61b22\b1_baobab_rt2.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: b_general_obj_25_1
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\b_general_obj_25_1.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25_1_3a83130970ca4ffda42a60bbcaabe035\b_general_obj_25_1.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\b_general_obj_25_1_3a83130970ca4ffda42a60bbcaabe035\b_general_obj_25_1.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+FAILED: general_obj_ferryboat02
+Source=C:\Users\roxy\OneDrive\Masaüstü\FARKLI\Metin2Client\Zone\ymir work\zone\b\obj\general_obj_ferryboat02.gr2
+ExitCode=0
+STDOUT:
+Noesis console mode activated.
+MessagePrompt:
+----
+The Python module could not be initialized. This may be due to the fact that you're running Noesis on a unicode path, where mbcs is the default filesystem encoding.
+----
+Noesis initialized.
+Source file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat02_94a17a694b304066876541ce7860974e\general_obj_ferryboat02.gr2
+Dest file: C:\Users\roxy\AppData\Local\Temp\SAGLAMKAFA_Noesis\general_obj_ferryboat02_94a17a694b304066876541ce7860974e\general_obj_ferryboat02.fbx
+Options: -fbxmeshmerge -rotate "90" "0" "0" -notex 
+===
+-fbxmeshmerge parameter accepted.
+-notex parameter accepted.
+Output extension has set output file type to:
+.fbx - Autodesk FBX
+Detected file type: Unknown
+Nothing was exported!
+
+STDERR:
+
+
+
+Noesis: C:\Users\roxy\OneDrive\Masaüstü\shared_3d_exporting\noesis\noesis\Noesis.exe
+Noesis dönüşümü: -rotate 90 0 0
+Koordinat ölçeği: 100 Metin2 unit = 1 Unity metre
+
+Bulunamayan Unity model adları:
+  b3_beech_rt3 x26
+  b1_beech_rt2 x24
+  b1_beech_rt4 x24
+  general_obj_fence03 x23
+  b1_montereycypress_rt2 x22
+  b1_beech_rt x21
+  b1_montereycypress_rt4 x20
+  b1_pagodatree_rt x20
+  b1_pagodatree_rt2 x19
+  general_obj_fence01 x19
+  b1_pagodatree_rt3 x18
+  b1_montereycypress_rt5 x18
+  b1_montereycypress_rt3 x18
+  b1_montereycypress_rt x18
+  general_obj_fence02 x18
+  general_obj_stone13 x14
+  b_general_obj_22 x14
+  b_general_obj_25 x13
+  ob-b1-001-box02 x13
+  ob-b1-001-box03 x13
+  general_obj_fence04 x12
+  general_obj_stone09 x11
+  general_obj_stone03 x11
+  ob-b1-001-box01 x11
+  general_obj_stone11 x9
+  general_obj_fence05 x9
+  b1_sassafras_rt_fall2 x8
+  general_obj_tent01 x8
+  b_general_obj_02 x8
+  b1_sassafras_rt_fall x7
+  general_obj_woodbed x7
+  general_obj_woodchair x6
+  general_obj_stone08 x6
+  general_obj_stone01 x6
+  b_general_obj_23 x5
+  b_general_obj_10 x5
+  general_obj_stone02 x5
+  b_general_obj_07 x5
+  b_general_obj_05 x5
+  hay_01 x5
+  ob-b1-006-woodbarrel x4
+  general_obj_jar_yellow01 x4
+  b_general_obj_21 x4
+  general_obj_carriage x4
+  general_obj_jar_yellow02 x4
+  general_obj_flag x4
+  general_obj_woodbox x4
+  general_obj_tent02 x4
+  b_general_obj_13 x4
+  b_general_obj_26 x4
+  general_obj_fence06 x4
+  shrubazaleasu x4
+  b_general_obj_01 x4
+  general_obj_suspension bridge02 x3
+  b_general_obj_27 x3
+  b_general_obj_28 x3
+  general_obj_stone07 x3
+  general_obj_charcoal x3
+  b_general_obj_01_1 x3
+  b_general_obj_03 x3
+  warpgate03 x2
+  general_obj_bigstone10 x2
+  b_general_obj_42 x2
+  b_general_obj_41 x2
+  obj-0006 x2
+  general_obj_jar_blue01 x2
+  b1-001-house3 x2
+  general_obj_jar_red01 x2
+  general_obj_jar_red02 x2
+  obj-0002 x2
+  general_obj_stonepillar_01 x2
+  landmark_statuestone x2
+  b_general_obj_40 x2
+  b_general_obj_04 x2
+  general_obj_ferryboat01 x2
+  general_obj_ferryboat03 x2
+  warpgate03_01 x1
+  general_obj_bigstonegate01 x1
+  general_obj_jar_blue02 x1
+  warpgate02_01 x1
+  obj-0003 x1
+  b1_baobab_rt x1
+  general_obj_drum x1
+  b_general_obj_38 x1
+  general_obj_itembox02 x1
+  b_general_obj_24 x1
+  general_obj_campfire x1
+  b_general_obj_37 x1
+  b_general_obj_33 x1
+  b_general_obj_06 x1
+  b_general_obj_25-2 x1
+  b_general_obj_21_1 x1
+  general_obj_txtstone x1
+  b_general_obj_14 x1
+  general_obj_suspension bridge01 x1
+  b3_shingleoak_rt2 x1
+  b1_baobab_rt2 x1
+  b_general_obj_25_1 x1
+  general_obj_ferryboat02 x1
+
+Bulunamayan Property ID'leri:
+  1751021842 x249
+  572912130 x152
+  3777792219 x140
+  3830901634 x96
+  1693773034 x72
+  1690876590 x41
+  3622849789 x33
+  1337000053 x27
+  1337000057 x25
+  2199057389 x21
+  1690876591 x15
+  3261036125 x13
+  1515957483 x9
+  2148895731 x9
+  2291203888 x9
+  2695137458 x9
+  301273183 x8
+  344435684 x8
+  2575491128 x8
+  1303007970 x7
+  1337000097 x7
+  1509880619 x6
+  2768536633 x6
+  1572488973 x5
+  2423438385 x5
+  2999999998 x5
+  990210835 x4
+  1057250038 x4
+  3617959242 x4
+  1165277127 x4
+  1337000082 x4
+  1589774343 x4
+  2071348303 x4
+  2999999993 x4
+  4102728334 x4
+  846902549 x3
+  4042152017 x3
+  1909623666 x3
+  3647256509 x3
+  4276823649 x3
+  4069895454 x2
+  805641330 x2
+  1026789651 x2
+  4150156935 x2
+  4215878518 x2
+  161728801 x2
+  215073809 x2
+  1003700180 x2
+  1069974922 x2
+  1363907077 x2
+  2486834679 x2
+  2999999995 x2
+  2999999997 x2
+  3099999042 x2
+  3099999060 x2
+  3551323872 x1
+  2341612470 x1
+  3099999079 x1
+  1337000047 x1
+  1337000084 x1
+  2151167633 x1
+  2999999992 x1
+  2999999996 x1
+  3099999048 x1
+  3099999049 x1
+  3099999081 x1
+  3647256486 x1
+  3647256488 x1
+  3647256489 x1
+  3647256499 x1
+  3647256507 x1
+  3099999016 x1
+  3099999034 x1
+  3099999050 x1
+  3099999058 x1
+  1175413186 x1
