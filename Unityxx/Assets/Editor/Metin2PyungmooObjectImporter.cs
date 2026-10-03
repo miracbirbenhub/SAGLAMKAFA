@@ -1601,10 +1601,18 @@ public static class Metin2PyungmooObjectImporter
         string propertySourcePath,
         Dictionary<string, string> sourceIndex)
     {
+        if (string.IsNullOrWhiteSpace(propertySourcePath) ||
+            sourceIndex == null ||
+            sourceIndex.Count == 0)
+        {
+            return null;
+        }
+
         string key =
             NormalizePropertySourcePath(
                 propertySourcePath);
 
+        // 1) Exact normalized path. This is the preferred and safest match.
         if (sourceIndex.TryGetValue(
                 key,
                 out string exact))
@@ -1612,16 +1620,50 @@ public static class Metin2PyungmooObjectImporter
             return exact;
         }
 
-        // Fallback: some unpack layouts omit "ymir work" from the
-        // relative path. Try suffix matching only after exact lookup.
+        // 2) Some unpack layouts use an extra directory prefix/suffix.
+        // Keep this fallback path-based so duplicate basenames do not
+        // accidentally resolve to the wrong zone.
         foreach (KeyValuePair<string, string> pair in sourceIndex)
         {
             if (pair.Key.EndsWith(
-                    key,
+                    "/" + key,
+                    StringComparison.OrdinalIgnoreCase) ||
+                key.EndsWith(
+                    "/" + pair.Key,
                     StringComparison.OrdinalIgnoreCase))
             {
                 return pair.Value;
             }
+        }
+
+        // 3) Last-resort basename matching. Only accept it when the basename
+        // is unique in the whole source index. This fixes old Property files
+        // that contain only a filename while avoiding ambiguous zone matches.
+        string basename =
+            Path.GetFileName(key);
+
+        if (!string.IsNullOrWhiteSpace(basename))
+        {
+            string candidate = null;
+            int matches = 0;
+
+            foreach (KeyValuePair<string, string> pair in sourceIndex)
+            {
+                if (string.Equals(
+                        Path.GetFileName(pair.Key),
+                        basename,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    candidate = pair.Value;
+                    matches++;
+
+                    if (matches > 1)
+                        break;
+                }
+            }
+
+            if (matches == 1)
+                return candidate;
         }
 
         return null;
@@ -1693,7 +1735,11 @@ public static class Metin2PyungmooObjectImporter
             {
                 stats.MissingSource++;
                 UnityEngine.Debug.LogWarning(
-                    $"Property source bulunamadı: {property.PropertyName} -> {property.SourcePath}");
+                    $"Property source bulunamadı: " +
+                    $"ID={property.Id} | " +
+                    $"Property={property.PropertyName} | " +
+                    $"Source={property.SourcePath} | " +
+                    $"PropertyFile={property.SourcePropertyFile}");
                 continue;
             }
 
