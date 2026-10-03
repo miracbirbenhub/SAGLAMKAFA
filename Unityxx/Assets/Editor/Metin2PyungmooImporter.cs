@@ -188,7 +188,7 @@ public static class Metin2PyungmooImporter
             if (currentId < 0)
                 continue;
 
-            if (currentPath == null && line.StartsWith(""") && line.EndsWith("""))
+            if (currentPath == null && line.StartsWith("\"") && line.EndsWith("\""))
             {
                 currentPath = line.Substring(1, line.Length - 2);
                 continue;
@@ -419,7 +419,7 @@ public static class Metin2PyungmooImporter
 
         var go = new GameObject($"Chunk_{chunk.Name}");
         go.transform.SetParent(parent, false);
-        go.localPosition = new Vector3(
+        go.transform.localPosition = new Vector3(
             chunk.X * TerrainCells * CellScaleMeters,
             0.0f,
             chunk.Y * TerrainCells * CellScaleMeters);
