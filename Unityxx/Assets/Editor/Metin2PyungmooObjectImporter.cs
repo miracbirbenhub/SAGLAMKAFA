@@ -277,13 +277,16 @@ public static class Metin2PyungmooObjectImporter
 
     private static Scene OpenPyungmooScene()
     {
-        string absoluteScene = Path.Combine(
-            Directory.GetParent(Application.dataPath).FullName,
-            ScenePath.Substring("Assets/".Length)
-                .Replace('/', Path.DirectorySeparatorChar));
+        // Unity tarafında proje içindeki Assets yolunu doğrudan kullan.
+        // Fiziksel dosya yolu üretmek yerine AssetDatabase kontrolü yapıyoruz;
+        // böylece repo/project klasör derinliği değişse bile sahne bulunur.
+        SceneAsset sceneAsset =
+            AssetDatabase.LoadAssetAtPath<SceneAsset>(ScenePath);
 
-        if (!File.Exists(absoluteScene))
-            throw new FileNotFoundException("Pyungmoo sahnesi bulunamadı.", absoluteScene);
+        if (sceneAsset == null)
+            throw new FileNotFoundException(
+                "Pyungmoo sahnesi Unity AssetDatabase içinde bulunamadı.",
+                ScenePath);
 
         Scene scene = SceneManager.GetActiveScene();
 
