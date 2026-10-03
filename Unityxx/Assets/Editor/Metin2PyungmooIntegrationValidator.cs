@@ -808,11 +808,11 @@ public static class Metin2PyungmooIntegrationValidator
     private static string ToAssetPath(string absolutePath)
     {
         string assetsRoot = Application.dataPath
-            .Replace('\', '/')
+            .Replace('\\', '/')
             .TrimEnd('/');
 
         string normalized = absolutePath
-            .Replace('\', '/');
+            .Replace('\\', '/');
 
         if (normalized.StartsWith(
                 assetsRoot + "/",
