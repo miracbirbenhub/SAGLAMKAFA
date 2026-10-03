@@ -15,9 +15,11 @@ public static class Metin2PyungmooImporter
     private const int TerrainCells = 256;
     private const int TileRawSize = 258;
 
-    // One Metin2 terrain chunk is 256 x 256 cells.
-    // The height map has 131 samples because one height sample covers a 2 x 2 cell area.
-    private const float CellScaleMeters = 2.0f;
+    // One Metin2 terrain chunk is 256 x 256 half-cells.
+    // tile.raw uses 100 world units (= 1 meter) per half-cell.
+    // height.raw stores 131 samples spanning the 128 terrain cells,
+    // so we interpolate them across the 256 one-meter mesh intervals.
+    private const float CellScaleMeters = 1.0f;
     private const float HeightScaleMetersPerRawUnit = 0.005f;
     private const float HeightSampleSpacingMeters = CellScaleMeters * 2.0f;
 
