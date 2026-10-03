@@ -170,6 +170,12 @@ public static class Metin2PyungmooObjectImporter
                         continue;
                     }
 
+                    // FINAL importer owns Building Property instances.
+                    // Keep this legacy/general object importer from creating duplicate
+                    // buildings when it is used to import trees/effects/other geometry.
+                    if (IsBuildingProperty(property))
+                        continue;
+
                     if (!IsGeometryProperty(property))
                     {
                         unsupportedProperty++;
