@@ -701,14 +701,14 @@ public static class Metin2PyungmooObjectImporter
 
         value = Regex.Replace(
             value,
-            @"_lod_\\d+out$",
+            @"_lod_\d+out$",
             string.Empty,
             RegexOptions.IgnoreCase |
             RegexOptions.CultureInvariant);
 
         value = Regex.Replace(
             value,
-            @"_lod_\\d+$",
+            @"_lod_\d+$",
             string.Empty,
             RegexOptions.IgnoreCase |
             RegexOptions.CultureInvariant);
