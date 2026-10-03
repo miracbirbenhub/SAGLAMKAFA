@@ -22,9 +22,10 @@ public static class Metin2PyungmooDirectBuildingImporter
     // Same coordinate convention already used by the terrain/object importer.
     private const float CoordinateScale = 0.02f;
 
+    public static bool LastImportSucceeded { get; private set; }
+
     [MenuItem("Metin2/Pyungmoo/Import Existing Building FBX Direct")]
     public static void ImportExistingBuildingFbxDirect()
-public static bool LastImportSucceeded { get; private set; }
     {
         LastImportSucceeded = false;
         try
