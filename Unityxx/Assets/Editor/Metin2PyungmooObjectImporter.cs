@@ -571,6 +571,308 @@ public static class Metin2PyungmooObjectImporter
         }
     }
 
+    [MenuItem("Metin2/Pyungmoo/Rebuild Buildings From AreaData")]
+    public static void RebuildBuildingsFromAreaData()
+    {
+        try
+        {
+            Scene scene = OpenPyungmooScene();
+
+            GameObject mapRoot = GameObject.Find("Pyungmoo");
+            if (mapRoot == null)
+                throw new InvalidOperationException("Pyungmoo GameObject'i bulunamadı.");
+
+            const string buildingsRootName = "Metin2Buildings";
+            Transform oldRoot = mapRoot.transform.Find(buildingsRootName);
+            if (oldRoot != null)
+                UnityEngine.Object.DestroyImmediate(oldRoot.gameObject);
+
+            Transform buildingsRoot =
+                new GameObject(buildingsRootName).transform;
+            buildingsRoot.SetParent(mapRoot.transform, false);
+
+            string repoRoot = GetRepoRoot();
+
+            string mapRootPath = FindDirectoryOrThrow(
+                repoRoot,
+                Path.Combine("Metin2Client", "OutdoorC1", "metin2_map_c1"),
+                Path.Combine("OutdoorC1", "metin2_map_c1"));
+
+            string propertyRoot = FindDirectoryOrThrow(
+                repoRoot,
+                Path.Combine("Metin2Client", "Property", "property"),
+                Path.Combine("Metin2Client", "Property"),
+                Path.Combine("Property", "property"),
+                Path.Combine("Property"));
+
+            var propertyRoots = new List<string> { propertyRoot };
+
+            string season3PropertyRoot = Path.Combine(
+                repoRoot,
+                "Metin2Client",
+                "season3_eu",
+                "property");
+
+            if (Directory.Exists(season3PropertyRoot))
+                propertyRoots.Add(season3PropertyRoot);
+
+            Dictionary<uint, PropertyEntry> properties =
+                LoadProperties(propertyRoots);
+
+            List<string> areaFiles =
+                DiscoverAreaFiles(mapRootPath);
+
+            List<PropertyEntry> neededBuildings =
+                new List<PropertyEntry>();
+
+            HashSet<string> seenSources =
+                new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            foreach (string areaFile in areaFiles)
+            {
+                foreach (AreaObject obj in ParseAreaData(areaFile))
+                {
+                    if (!properties.TryGetValue(
+                            obj.PropertyId,
+                            out PropertyEntry property))
+                        continue;
+
+                    if (!IsBuildingProperty(property))
+                        continue;
+
+                    string key =
+                        NormalizePropertySourcePath(
+                            property.SourcePath);
+
+                    if (string.IsNullOrEmpty(key) ||
+                        !seenSources.Add(key))
+                        continue;
+
+                    neededBuildings.Add(property);
+                }
+            }
+
+            Dictionary<string, string> sourceIndex =
+                BuildSourceFileIndex(repoRoot);
+
+            string noesisPath = FindNoesis(repoRoot);
+
+            if (string.IsNullOrEmpty(noesisPath))
+            {
+                throw new FileNotFoundException(
+                    "Noesis.exe bulunamadı. " +
+                    "Eksik Building GR2'lerini FBX'e çevirmek için Noesis gerekli.");
+            }
+
+            ConversionStats conversion =
+                AutoConvertMissingModels(
+                    noesisPath,
+                    neededBuildings,
+                    sourceIndex);
+
+            AssetDatabase.Refresh();
+
+            Dictionary<string, GameObject> modelIndex =
+                BuildModelIndex();
+
+            int buildingObjects = 0;
+            int placed = 0;
+            int missingSource = 0;
+            int missingModel = 0;
+
+            var missingModels =
+                new Dictionary<string, int>(
+                    StringComparer.OrdinalIgnoreCase);
+
+            foreach (string areaFile in areaFiles)
+            {
+                string chunkName =
+                    Path.GetFileName(
+                        Path.GetDirectoryName(areaFile));
+
+                Transform chunkRoot =
+                    new GameObject(
+                        "Buildings_" + chunkName).transform;
+
+                chunkRoot.SetParent(
+                    buildingsRoot,
+                    false);
+
+                foreach (AreaObject obj in ParseAreaData(areaFile))
+                {
+                    if (!properties.TryGetValue(
+                            obj.PropertyId,
+                            out PropertyEntry property))
+                        continue;
+
+                    if (!IsBuildingProperty(property))
+                        continue;
+
+                    buildingObjects++;
+
+                    if (string.IsNullOrWhiteSpace(
+                            property.SourcePath))
+                    {
+                        missingSource++;
+                        continue;
+                    }
+
+                    string modelName =
+                        Path.GetFileNameWithoutExtension(
+                            NormalizePropertySourcePath(
+                                property.SourcePath));
+
+                    if (!TryFindModel(
+                            modelIndex,
+                            modelName,
+                            out GameObject model))
+                    {
+                        missingModel++;
+                        Increment(
+                            missingModels,
+                            modelName);
+                        continue;
+                    }
+
+                    GameObject instance =
+                        PrefabUtility.InstantiatePrefab(model)
+                        as GameObject;
+
+                    if (instance == null)
+                    {
+                        missingModel++;
+                        Increment(
+                            missingModels,
+                            modelName);
+                        continue;
+                    }
+
+                    instance.name =
+                        $"BUILD_{obj.ObjectIndex:000}_{Sanitize(property.PropertyName)}";
+
+                    instance.transform.SetParent(
+                        chunkRoot,
+                        false);
+
+                    instance.transform.position =
+                        new Vector3(
+                            obj.Position.x * CoordinateScale,
+                            obj.Position.z * CoordinateScale,
+                            -obj.Position.y * CoordinateScale);
+
+                    instance.transform.rotation =
+                        ConvertRotation(obj.Rotation);
+
+                    instance.isStatic = true;
+
+                    AddMeshColliders(instance);
+
+                    placed++;
+                }
+            }
+
+            var report = new StringBuilder();
+            report.AppendLine(
+                "Pyungmoo Building Rebuild Report");
+            report.AppendLine(
+                DateTime.Now.ToString(
+                    "yyyy-MM-dd HH:mm:ss",
+                    CultureInfo.InvariantCulture));
+            report.AppendLine();
+            report.AppendLine(
+                $"AreaData files: {areaFiles.Count}");
+            report.AppendLine(
+                $"Building object instances: {buildingObjects}");
+            report.AppendLine(
+                $"Unique Building sources: {neededBuildings.Count}");
+            report.AppendLine(
+                $"Yerleştirilen: {placed}");
+            report.AppendLine(
+                $"Eksik source: {missingSource}");
+            report.AppendLine(
+                $"Eksik Unity model: {missingModel}");
+            report.AppendLine(
+                $"Yeni FBX: {conversion.Converted}");
+            report.AppendLine(
+                $"Zaten mevcut model: {conversion.AlreadyExisting}");
+            report.AppendLine(
+                $"Source bulunamadı: {conversion.MissingSource}");
+            report.AppendLine(
+                $"Noesis hatası: {conversion.Failed}");
+            report.AppendLine();
+            report.AppendLine(
+                $"Noesis: {noesisPath}");
+            report.AppendLine(
+                "Koordinat ölçeği: 0.02 Unity m / AreaData unit");
+            report.AppendLine();
+            report.AppendLine(
+                "Bu işlem önce mevcut Unity modellerini kullanır; " +
+                "yalnızca AreaData'nın gerçekten referans verdiği eksik GR2'leri AutoModels altında FBX'e çevirir.");
+
+            if (missingModels.Count > 0)
+            {
+                report.AppendLine();
+                report.AppendLine(
+                    "Dönüşümden sonra hâlâ bulunamayan modeller:");
+
+                foreach (var item in missingModels
+                             .OrderByDescending(x => x.Value))
+                {
+                    report.AppendLine(
+                        $"  {item.Key} x{item.Value}");
+                }
+            }
+
+            string reportAbsolute =
+                Path.Combine(
+                    Application.dataPath,
+                    "Metin2Generated",
+                    "Pyungmoo",
+                    "PyungmooBuildingRebuildReport.txt");
+
+            Directory.CreateDirectory(
+                Path.GetDirectoryName(reportAbsolute));
+
+            File.WriteAllText(
+                reportAbsolute,
+                report.ToString(),
+                new UTF8Encoding(false));
+
+            AssetDatabase.Refresh();
+
+            EditorSceneManager.MarkSceneDirty(scene);
+            EditorSceneManager.SaveScene(scene, ScenePath);
+            AssetDatabase.SaveAssets();
+
+            Selection.activeGameObject =
+                buildingsRoot.gameObject;
+
+            EditorUtility.DisplayDialog(
+                "Pyungmoo Building rebuild tamamlandı",
+                $"Building instances: {buildingObjects}\n" +
+                $"Unique source: {neededBuildings.Count}\n" +
+                $"Yerleştirilen: {placed}\n" +
+                $"Eksik Unity model: {missingModel}\n" +
+                $"Yeni FBX: {conversion.Converted}\n" +
+                $"Noesis hatası: {conversion.Failed}\n\n" +
+                "Sadece AreaData'nın gerçekten kullandığı Building kaynakları işlendi.\n\n" +
+                "Rapor:\n" +
+                "Assets/Metin2Generated/Pyungmoo/PyungmooBuildingRebuildReport.txt",
+                "Tamam");
+        }
+        catch (Exception ex)
+        {
+            UnityEngine.Debug.LogException(ex);
+            EditorUtility.ClearProgressBar();
+
+            EditorUtility.DisplayDialog(
+                "Pyungmoo Building rebuild hatası",
+                ex.Message,
+                "Tamam");
+        }
+    }
+
     private static bool IsBuildingProperty(PropertyEntry property)
     {
         if (property == null ||
