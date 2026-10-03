@@ -780,7 +780,7 @@ public static class Metin2PyungmooObjectImporter
             {
                 // REQUIRED orientation correction.
                 string arguments =
-                    $"?cmode ""{sourceFile}"" ""{outputFbx}"" " +
+                    $"?cmode \"{sourceFile}\" \"{outputFbx}\" " +
                     "-fbxmeshmerge -rotate 90 0 0";
 
                 UnityEngine.Debug.Log(
