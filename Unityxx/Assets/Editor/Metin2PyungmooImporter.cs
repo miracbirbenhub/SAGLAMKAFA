@@ -279,8 +279,12 @@ public static class Metin2PyungmooImporter
                 assetsRoot,
                 destinationAsset.Substring("Assets/".Length).TrimStart('/').Replace('/', Path.DirectorySeparatorChar));
 
-            if (!File.Exists(destinationAbsolute))
-                File.Copy(sourceFile, destinationAbsolute);
+            // Metin2'nin eski DDS dosyaları 256x256 DXT1 olsa da yalnızca 5-6 mip
+            // içeriyor. Unity 6 tam mip zinciri beklediği için dosyayı tek mip olarak
+            // normalize ediyoruz; Unity eksik mipleri kendi oluşturabilir.
+            byte[] sourceBytes = File.ReadAllBytes(sourceFile);
+            byte[] unityDds = NormalizeDdsForUnity(sourceBytes);
+            File.WriteAllBytes(destinationAbsolute, unityDds);
 
             AssetDatabase.ImportAsset(destinationAsset, ImportAssetOptions.ForceUpdate);
 
@@ -312,6 +316,85 @@ public static class Metin2PyungmooImporter
             throw new InvalidOperationException("Pyungmoo TextureSet'teki DDS'lerin hiçbiri import edilemedi.");
 
         return materials;
+    }
+
+    private static byte[] NormalizeDdsForUnity(byte[] source)
+    {
+        if (source == null || source.Length < 128)
+            throw new InvalidDataException("DDS dosyası 128 bayttan küçük.");
+
+        if (source[0] != (byte)'D' ||
+            source[1] != (byte)'D' ||
+            source[2] != (byte)'S' ||
+            source[3] != (byte)' ')
+        {
+            throw new InvalidDataException("Geçersiz DDS magic.");
+        }
+
+        uint headerSize = ReadUInt32(source, 4);
+        if (headerSize != 124)
+            throw new InvalidDataException($"Beklenmeyen DDS header boyutu: {headerSize}");
+
+        int height = (int)ReadUInt32(source, 12);
+        int width = (int)ReadUInt32(source, 16);
+        string fourCC = new string(new[]
+        {
+            (char)source[84], (char)source[85], (char)source[86], (char)source[87]
+        });
+
+        if (width <= 0 || height <= 0)
+            throw new InvalidDataException($"Geçersiz DDS boyutu: {width}x{height}");
+
+        // Şu anki Metin2 terrain seti DXT1. Diğer DDS türlerini yanlışlıkla
+        // dönüştürmemek için yalnızca DXT1'i normalize ediyoruz.
+        if (!string.Equals(fourCC, "DXT1", StringComparison.Ordinal))
+            return source;
+
+        int blockWidth = Mathf.Max(1, (width + 3) / 4);
+        int blockHeight = Mathf.Max(1, (height + 3) / 4);
+        int topMipSize = blockWidth * blockHeight * 8;
+        int payloadStart = 128;
+
+        if (source.Length < payloadStart + topMipSize)
+            throw new InvalidDataException(
+                $"DDS DXT1 payload eksik. Beklenen en az {payloadStart + topMipSize} bayt, mevcut {source.Length}.");
+
+        byte[] result = new byte[payloadStart + topMipSize];
+        Buffer.BlockCopy(source, 0, result, 0, payloadStart);
+        Buffer.BlockCopy(source, payloadStart, result, payloadStart, topMipSize);
+
+        // dwFlags: DDSD_MIPMAPCOUNT bitini kaldır.
+        uint flags = ReadUInt32(result, 8);
+        flags &= ~0x00020000u;
+        WriteUInt32(result, 8, flags);
+
+        // dwMipMapCount = 1.
+        WriteUInt32(result, 28, 1u);
+
+        // dwCaps: DDSCAPS_TEXTURE kalsın; COMPLEX/MIPMAP kalksın.
+        uint caps = ReadUInt32(result, 108);
+        caps &= ~(0x00000008u | 0x00400000u);
+        caps |= 0x00001000u;
+        WriteUInt32(result, 108, caps);
+
+        return result;
+    }
+
+    private static uint ReadUInt32(byte[] bytes, int offset)
+    {
+        return (uint)(
+            bytes[offset] |
+            (bytes[offset + 1] << 8) |
+            (bytes[offset + 2] << 16) |
+            (bytes[offset + 3] << 24));
+    }
+
+    private static void WriteUInt32(byte[] bytes, int offset, uint value)
+    {
+        bytes[offset] = (byte)(value & 0xFF);
+        bytes[offset + 1] = (byte)((value >> 8) & 0xFF);
+        bytes[offset + 2] = (byte)((value >> 16) & 0xFF);
+        bytes[offset + 3] = (byte)((value >> 24) & 0xFF);
     }
 
     private static string ResolveTerrainTexture(string repoRoot, string sourcePath)
