@@ -13,8 +13,6 @@ public static class Metin2PyungmooIntegrationValidator
 {
     private const string ScenePath = "Assets/Scenes/Pyungmoo.unity";
     private const string RootName = "Pyungmoo";
-    private const string BuildingFolder = "Assets/Metin2Imported/Building";
-    private const string NpcFolder = "Assets/Metin2Imported/NPC";
     private const string BuildingGalleryName = "BuildingFBXPreview";
     private const string BuildingRootName = "DirectBuildingObjects";
     private const string NpcRootName = "NPCs";
