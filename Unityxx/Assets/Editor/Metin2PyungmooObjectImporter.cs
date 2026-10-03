@@ -258,6 +258,19 @@ public static class Metin2PyungmooObjectImporter
                 $"Kaynak bulunamadı: {conversion.MissingSource}");
             report.AppendLine(
                 $"Noesis hatası: {conversion.Failed}");
+
+            if (conversion.FailureDetails.Count > 0)
+            {
+                report.AppendLine();
+                report.AppendLine("Noesis hata detayları:");
+
+                foreach (string detail in conversion.FailureDetails)
+                {
+                    report.AppendLine(detail);
+                    report.AppendLine();
+                }
+            }
+
             report.AppendLine();
             report.AppendLine(
                 $"Noesis: {(string.IsNullOrEmpty(noesisPath) ? "bulunamadı" : noesisPath)}");
@@ -447,7 +460,8 @@ public static class Metin2PyungmooObjectImporter
             ".prd",
             ".pte",
             ".pre",
-            ".pra"
+            ".pra",
+            ".prt"
         };
 
         IEnumerable<string> files =
@@ -822,8 +836,12 @@ public static class Metin2PyungmooObjectImporter
 
                         stats.Failed++;
 
+                        string detail =
+                            $"TIMEOUT: {modelName}\nSource={sourceFile}";
+                        stats.FailureDetails.Add(detail);
+
                         UnityEngine.Debug.LogWarning(
-                            $"Noesis timeout: {modelName}");
+                            detail);
 
                         continue;
                     }
@@ -839,11 +857,16 @@ public static class Metin2PyungmooObjectImporter
                     {
                         stats.Failed++;
 
-                        UnityEngine.Debug.LogWarning(
-                            $"Noesis başarısız: {modelName}\n" +
+                        string detail =
+                            $"FAILED: {modelName}\n" +
+                            $"Source={sourceFile}\n" +
                             $"ExitCode={process.ExitCode}\n" +
                             $"STDOUT:\n{stdout}\n" +
-                            $"STDERR:\n{stderr}");
+                            $"STDERR:\n{stderr}";
+
+                        stats.FailureDetails.Add(detail);
+
+                        UnityEngine.Debug.LogWarning(detail);
 
                         continue;
                     }
@@ -863,9 +886,14 @@ public static class Metin2PyungmooObjectImporter
             {
                 stats.Failed++;
 
-                UnityEngine.Debug.LogWarning(
-                    $"GR2/SPT -> FBX exception: {modelName}\n" +
-                    ex.Message);
+                string detail =
+                    $"EXCEPTION: {modelName}\n" +
+                    $"Source={sourceFile}\n" +
+                    ex;
+
+                stats.FailureDetails.Add(detail);
+
+                UnityEngine.Debug.LogWarning(detail);
             }
         }
 
@@ -1329,5 +1357,7 @@ public static class Metin2PyungmooObjectImporter
         public int AlreadyExisting;
         public int MissingSource;
         public int Failed;
+        public readonly List<string> FailureDetails =
+            new List<string>();
     }
 }
