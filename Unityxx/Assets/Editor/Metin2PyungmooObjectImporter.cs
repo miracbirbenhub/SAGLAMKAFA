@@ -30,6 +30,11 @@ public static class Metin2PyungmooObjectImporter
     [MenuItem("Metin2/Pyungmoo/Import Map Objects")]
     public static void ImportMapObjects()
     {
+        ImportMapObjectsAuto(true);
+    }
+
+    public static void ImportMapObjectsAuto(bool showDialogs)
+    {
         try
         {
             Scene scene = OpenPyungmooScene();
@@ -110,17 +115,69 @@ public static class Metin2PyungmooObjectImporter
                 $"missing Property IDs={uniqueMissingPropertyIds}, " +
                 $"Property index={properties.Count}");
 
-            // Normal map import is deterministic and uses prepared FBXs only.
-            // GR2/SPT -> FBX is intentionally manual.
             ConversionStats conversion = new ConversionStats();
-
-            UnityEngine.Debug.Log(
-                "Pyungmoo: otomatik Noesis dönüşümü KAPALI. " +
-                "Hazır FBX'ler yerleştirilecek; GR2/SPT -> FBX manuel yapılacak.");
+            bool noesisUsed;
+            int placeholderTrees = 0;
+            var placeholderModels = new Dictionary<string, int>(
+                StringComparer.OrdinalIgnoreCase);
 
             AssetDatabase.Refresh();
 
             Dictionary<string, GameObject> modelIndex = BuildModelIndex();
+
+            // GR2/SPT -> FBX: Noesis (ASCII-safe kopyası) ile eksik modelleri üret.
+            string noesisExe = Metin2PyungmooSetup.PrepareNoesis();
+            noesisUsed = !string.IsNullOrEmpty(noesisExe);
+
+            if (noesisUsed)
+            {
+                var neededProperties = new List<PropertyEntry>();
+                var neededSeen = new HashSet<string>(
+                    StringComparer.OrdinalIgnoreCase);
+
+                foreach (AreaObject areaObject in allObjects)
+                {
+                    if (!properties.TryGetValue(
+                            areaObject.PropertyId,
+                            out PropertyEntry needed))
+                        continue;
+
+                    if (IsBuildingProperty(needed) ||
+                        !IsGeometryProperty(needed))
+                        continue;
+
+                    string neededName =
+                        Path.GetFileNameWithoutExtension(
+                            needed.SourcePath);
+
+                    if (TryFindModel(
+                            modelIndex,
+                            neededName,
+                            out GameObject _))
+                        continue;
+
+                    if (neededSeen.Add(neededName))
+                        neededProperties.Add(needed);
+                }
+
+                UnityEngine.Debug.Log(
+                    $"Pyungmoo: {neededProperties.Count} eksik model Noesis ile " +
+                    $"dönüştürülecek. Noesis: {noesisExe}");
+
+                conversion = AutoConvertMissingModels(
+                    noesisExe,
+                    neededProperties,
+                    BuildSourceFileIndex(repoRoot));
+
+                AssetDatabase.Refresh();
+                modelIndex = BuildModelIndex();
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning(
+                    "Pyungmoo: Noesis.exe bulunamadı; otomatik dönüşüm atlandı. " +
+                    "Metin2/Pyungmoo/Set Noesis Path menüsünden yolu ayarlayabilirsin.");
+            }
 
             int chunkCount = 0;
             int placed = 0;
@@ -186,21 +243,31 @@ public static class Metin2PyungmooObjectImporter
                         Path.GetFileNameWithoutExtension(
                             property.SourcePath);
 
-                    if (!TryFindModel(
+                    GameObject instance = null;
+                    bool isPlaceholder = false;
+
+                    if (TryFindModel(
                             modelIndex,
                             modelName,
                             out GameObject model))
                     {
-                        missingModel++;
-                        Increment(
-                            missingModels,
-                            modelName);
-                        continue;
+                        instance =
+                            PrefabUtility.InstantiatePrefab(model)
+                            as GameObject;
                     }
-
-                    GameObject instance =
-                        PrefabUtility.InstantiatePrefab(model)
-                        as GameObject;
+                    else if (Metin2PyungmooSetup.UsePlaceholderTrees &&
+                             property.SourcePath.EndsWith(
+                                 ".spt",
+                                 StringComparison.OrdinalIgnoreCase))
+                    {
+                        // SPT -> FBX dönüşümü olmayan ağaçlar için görünür,
+                        // açıkça etiketli geçici ağaç. Gerçek FBX gelince bu
+                        // import tekrar çalıştırıldığında otomatik değişir.
+                        instance =
+                            Metin2PyungmooSetup.CreateTreePlaceholder(
+                                modelName);
+                        isPlaceholder = instance != null;
+                    }
 
                     if (instance == null)
                     {
@@ -211,8 +278,17 @@ public static class Metin2PyungmooObjectImporter
                         continue;
                     }
 
+                    if (isPlaceholder)
+                    {
+                        placeholderTrees++;
+                        Increment(
+                            placeholderModels,
+                            modelName);
+                    }
+
                     instance.name =
-                        $"OBJ_{obj.ObjectIndex:000}_{Sanitize(property.PropertyName)}";
+                        (isPlaceholder ? "TREE_PLACEHOLDER_" : "OBJ_") +
+                        $"{obj.ObjectIndex:000}_{Sanitize(property.PropertyName)}";
 
                     instance.transform.SetParent(
                         currentChunkRoot,
@@ -229,7 +305,8 @@ public static class Metin2PyungmooObjectImporter
 
                     instance.isStatic = true;
 
-                    AddMeshColliders(instance);
+                    if (!isPlaceholder)
+                        AddMeshColliders(instance);
 
                     placed++;
                 }
@@ -287,12 +364,28 @@ public static class Metin2PyungmooObjectImporter
 
             report.AppendLine();
             report.AppendLine(
-                "Otomatik Noesis dönüşümü: KAPALI");
+                "Otomatik Noesis dönüşümü: " +
+                (noesisUsed ? "AÇIK" : "ATLANDI (Noesis.exe bulunamadı)"));
             report.AppendLine(
-                "GR2/SPT -> FBX: manuel");
+                $"Geçici (placeholder) ağaç: {placeholderTrees}");
             report.AppendLine(
                 "Koordinat ölçeği: 50 Metin2 unit = 1 Unity metre (0.02 m/unit)");
             report.AppendLine();
+
+            if (placeholderModels.Count > 0)
+            {
+                report.AppendLine(
+                    "Placeholder ile gösterilen SPT ağaçları (gerçek FBX yok):");
+
+                foreach (var item in placeholderModels
+                             .OrderByDescending(x => x.Value))
+                {
+                    report.AppendLine(
+                        $"  {item.Key} x{item.Value}");
+                }
+
+                report.AppendLine();
+            }
 
             if (missingModels.Count > 0)
             {
@@ -332,6 +425,7 @@ public static class Metin2PyungmooObjectImporter
 
             Selection.activeGameObject = objectRoot.gameObject;
 
+            if (showDialogs)
             EditorUtility.DisplayDialog(
                 "Pyungmoo objeleri hazır",
                 $"Chunk: {chunkCount}\n" +
@@ -343,6 +437,7 @@ public static class Metin2PyungmooObjectImporter
                 $"Eksik Property: {missingProperty}\n" +
                 $"Eksik model: {missingModel}\n" +
                 $"Yeni FBX: {conversion.Converted}\n" +
+                $"Placeholder ağaç: {placeholderTrees}\n" +
                 $"Noesis hata: {conversion.Failed}\n\n" +
                 $"Rapor:\n{ReportPath}",
                 "Tamam");
@@ -350,6 +445,9 @@ public static class Metin2PyungmooObjectImporter
         catch (Exception ex)
         {
             UnityEngine.Debug.LogException(ex);
+
+            if (!showDialogs)
+                throw;
 
             EditorUtility.DisplayDialog(
                 "Pyungmoo object import hatası",
@@ -1803,6 +1901,16 @@ public static class Metin2PyungmooObjectImporter
 
         foreach (PropertyEntry property in neededProperties)
         {
+            // Noesis hiçbir modeli dönüştüremiyorsa (örn. plugin/Python
+            // başlatılamadı) saatlerce denemek yerine erken bırak.
+            if (stats.Converted == 0 && stats.Failed >= 12)
+            {
+                stats.FailureDetails.Add(
+                    "ABORT: İlk 12 dönüşüm başarısız oldu, kalan modeller " +
+                    "denenmedi. Noesis/plugin kurulumunu kontrol et.");
+                break;
+            }
+
             if (string.IsNullOrWhiteSpace(property.SourcePath))
             {
                 stats.MissingSource++;
@@ -2332,6 +2440,9 @@ public static class Metin2PyungmooObjectImporter
         var candidates =
             new List<string>
             {
+                Path.Combine(Metin2PyungmooSetup.SharedExportingDir, "Spt2Fbx.exe"),
+                Path.Combine(Metin2PyungmooSetup.SharedExportingDir, "SPT-to-FBX-Converter", "Spt2Fbx.exe"),
+                Path.Combine(Metin2PyungmooSetup.SharedExportingDir, "SPT-to-FBX-Converter", "Spt-to-FBX.exe"),
                 Path.Combine(repoRoot, "Spt2Fbx.exe"),
                 Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt2Fbx.exe"),
                 Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt-to-FBX.exe"),
