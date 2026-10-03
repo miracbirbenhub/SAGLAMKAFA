@@ -173,8 +173,20 @@ public static class Metin2PyungmooFinalImporter
                 "Pyungmoo AreaData beklenen 1748 nesne yerine " +
                 areaObjects.Count + " nesne içeriyor.");
 
+        var propertyRoots = new List<string> { propertyRoot };
+
+        string zonePropertyRoot =
+            Path.Combine(repoRoot, "Metin2Client", "Zone");
+        if (Directory.Exists(zonePropertyRoot))
+            propertyRoots.Add(zonePropertyRoot);
+
+        string season3PropertyRoot =
+            Path.Combine(repoRoot, "Metin2Client", "season3_eu", "property");
+        if (Directory.Exists(season3PropertyRoot))
+            propertyRoots.Add(season3PropertyRoot);
+
         Dictionary<uint, BuildingProperty> buildingProperties =
-            LoadBuildingProperties(propertyRoot, repoRoot, buildingCanonical);
+            LoadBuildingProperties(propertyRoots, repoRoot, buildingCanonical);
 
         if (buildingProperties.Count == 0)
             throw new InvalidOperationException(
@@ -583,7 +595,7 @@ public static class Metin2PyungmooFinalImporter
     }
 
     private static Dictionary<uint, BuildingProperty> LoadBuildingProperties(
-        string propertyRoot,
+        IEnumerable<string> propertyRoots,
         string repoRoot,
         Dictionary<string, BuildingModel> buildingCanonical)
     {
@@ -591,8 +603,9 @@ public static class Metin2PyungmooFinalImporter
         var scores = new Dictionary<uint, int>();
         var ambiguous = new HashSet<uint>();
 
+        foreach (string root in propertyRoots.Where(Directory.Exists))
         foreach (string file in Directory.EnumerateFiles(
-                     propertyRoot,
+                     root,
                      "*.*",
                      SearchOption.AllDirectories)
                  .Where(x =>
