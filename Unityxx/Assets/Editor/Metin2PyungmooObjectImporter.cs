@@ -457,10 +457,12 @@ public static class Metin2PyungmooObjectImporter
             ".prb",
             ".prt",
             ".ptr",
+            ".prt",
             ".prd",
             ".pte",
             ".pre",
-            ".pra"
+            ".pra",
+            ".prt"
         };
 
         IEnumerable<string> files =
@@ -807,39 +809,9 @@ public static class Metin2PyungmooObjectImporter
 
             try
             {
-                if (!string.IsNullOrEmpty(dedicatedSptConverter))
-                {
-                    string dedicatedStdout;
-                    string dedicatedStderr;
-                    int dedicatedExitCode;
-
-                    if (TryRunSptFbxConverter(
-                        dedicatedSptConverter,
-                        sourceFile,
-                        outputFbx,
-                        out dedicatedStdout,
-                        out dedicatedStderr,
-                        out dedicatedExitCode))
-                    {
-                        stats.Converted++;
-                        EditorUtility.DisplayProgressBar(
-                            "Pyungmoo modelleri",
-                            modelName,
-                            stats.Converted /
-                            (float)Math.Max(
-                                1,
-                                neededProperties.Count));
-                        continue;
-                    }
-
-                    UnityEngine.Debug.LogWarning(
-                        $"Özel SPT converter başarısız, Noesis fallback kullanılacak: {modelName}\n" +
-                        $"Converter={dedicatedSptConverter}\n" +
-                        $"ExitCode={dedicatedExitCode}\n" +
-                        $"STDOUT:\n{dedicatedStdout}\n" +
-                        $"STDERR:\n{dedicatedStderr}");
-                }
-
+                // Older Noesis builds can be unreliable when input/output
+                // paths contain non-ASCII characters. Stage the conversion
+                // through an ASCII-only temporary directory.
                 string tempRoot =
                     Path.Combine(
                         Path.GetTempPath(),
@@ -869,107 +841,138 @@ public static class Metin2PyungmooObjectImporter
                         workFolder,
                         safeModelName + ".fbx");
 
-                bool isSpt =
-                    Path.GetExtension(sourceFile)
-                        .Equals(
-                            ".spt",
-                            StringComparison.OrdinalIgnoreCase);
+                File.Copy(
+                    sourceFile,
+                    stagedInput,
+                    true);
 
-                if (!isSpt)
+                if (!string.IsNullOrEmpty(dedicatedSptConverter))
                 {
-                    File.Copy(
-                        sourceFile,
-                        stagedInput,
-                        true);
-                }
+                    string dedicatedOutput =
+                        Path.Combine(
+                            workFolder,
+                            Path.GetFileNameWithoutExtension(
+                                stagedInput) + ".fbx");
 
-                string[] inputCandidates =
-                    isSpt
-                        ? new[] { sourceFile }
-                        : new[] { sourceFile, stagedInput };
+                    string dedicatedStdout;
+                    string dedicatedStderr;
+                    int dedicatedExitCode;
+
+                    if (TryRunSptFbxConverter(
+                            dedicatedSptConverter,
+                            stagedInput,
+                            dedicatedOutput,
+                            out dedicatedStdout,
+                            out dedicatedStderr,
+                            out dedicatedExitCode))
+                    {
+                        File.Copy(
+                            dedicatedOutput,
+                            outputFbx,
+                            true);
+
+                        stats.Converted++;
+
+                        try
+                        {
+                            if (Directory.Exists(workFolder))
+                                Directory.Delete(workFolder, true);
+                        }
+                        catch
+                        {
+                        }
+
+                        EditorUtility.DisplayProgressBar(
+                            "Pyungmoo modelleri",
+                            modelName,
+                            stats.Converted /
+                            (float)Math.Max(
+                                1,
+                                neededProperties.Count));
+
+                        continue;
+                    }
+
+                    UnityEngine.Debug.LogWarning(
+                        $"Özel SPT converter başarısız, Noesis fallback kullanılacak: {modelName}\n" +
+                        $"Converter={dedicatedSptConverter}\n" +
+                        $"ExitCode={dedicatedExitCode}\n" +
+                        $"STDOUT:\n{dedicatedStdout}\n" +
+                        $"STDERR:\n{dedicatedStderr}");
+                }
 
                 string[] optionSets =
                 {
-                    "-fbxnewexport -fbxmeshmerge -noanims -notex -rotate 90 0 0",
-                    "-fbxmeshmerge -noanims -notex -rotate 90 0 0",
-                    "-fbxmeshmerge -notex -rotate 90 0 0",
-                    "-fbxmeshmerge -rotate 90 0 0"
+                    "-fbxnewexport -fbxmeshmerge -rotate 90 0 0",
+                    "-fbxnewexport -fbxmeshmerge -rotate 90 0 0 -notex",
+                    "-fbxmeshmerge -rotate 90 0 0 -notex"
                 };
 
                 bool success = false;
                 int exitCode = -1;
                 string stdout = string.Empty;
                 string stderr = string.Empty;
-                string successfulInput = null;
 
-                foreach (string inputFile in inputCandidates)
+                foreach (string options in optionSets)
                 {
-                    foreach (string options in optionSets)
+                    if (File.Exists(stagedOutput))
+                        File.Delete(stagedOutput);
+
+                    string arguments =
+                        $"?cmode \"{stagedInput}\" \"{stagedOutput}\" {options}";
+
+                    UnityEngine.Debug.Log(
+                        $"Noesis GR2/SPT -> FBX: {modelName}\n" +
+                        $"Source: {sourceFile}\n" +
+                        $"Staged: {stagedInput}\n" +
+                        $"Args: {arguments}");
+
+                    using (Process process = new Process())
                     {
-                        if (File.Exists(stagedOutput))
-                            File.Delete(stagedOutput);
+                        process.StartInfo =
+                            new ProcessStartInfo
+                            {
+                                FileName = noesisPath,
+                                Arguments = arguments,
+                                WorkingDirectory =
+                                    Path.GetDirectoryName(noesisPath),
+                                UseShellExecute = false,
+                                CreateNoWindow = true,
+                                RedirectStandardOutput = true,
+                                RedirectStandardError = true
+                            };
 
-                        string arguments =
-                            $"?cmode \"{inputFile}\" \"{stagedOutput}\" {options}";
+                        process.Start();
 
-                        UnityEngine.Debug.Log(
-                            $"Noesis GR2/SPT -> FBX: {modelName}\n" +
-                            $"Source: {sourceFile}\n" +
-                            $"Input: {inputFile}\n" +
-                            $"Args: {arguments}");
-
-                        using (Process process = new Process())
+                        if (!process.WaitForExit(NoesisTimeoutMs))
                         {
-                            process.StartInfo =
-                                new ProcessStartInfo
-                                {
-                                    FileName = noesisPath,
-                                    Arguments = arguments,
-                                    WorkingDirectory =
-                                        Path.GetDirectoryName(noesisPath),
-                                    UseShellExecute = false,
-                                    CreateNoWindow = true,
-                                    RedirectStandardOutput = true,
-                                    RedirectStandardError = true
-                                };
+                            try { process.Kill(); }
+                            catch { }
 
-                            process.Start();
-
-                            if (!process.WaitForExit(NoesisTimeoutMs))
-                            {
-                                try { process.Kill(); }
-                                catch { }
-
-                                exitCode = -1;
-                                stderr = "Noesis timeout.";
-                                continue;
-                            }
-
-                            exitCode = process.ExitCode;
-                            stdout = process.StandardOutput.ReadToEnd();
-                            stderr = process.StandardError.ReadToEnd();
-
-                            if (exitCode == 0 &&
-                                File.Exists(stagedOutput) &&
-                                new FileInfo(stagedOutput).Length > 0)
-                            {
-                                success = true;
-                                successfulInput = inputFile;
-                                break;
-                            }
-
-                            UnityEngine.Debug.LogWarning(
-                                $"Noesis denemesi başarısız: {modelName}\n" +
-                                $"Input={inputFile}\n" +
-                                $"Options={options}\n" +
-                                $"ExitCode={exitCode}\n" +
-                                $"STDOUT:\n{stdout}\n" +
-                                $"STDERR:\n{stderr}");
+                            exitCode = -1;
+                            stderr = "Noesis timeout.";
+                            continue;
                         }
-                    }
 
-                    if (success)
-                        break;
+                        exitCode = process.ExitCode;
+                        stdout = process.StandardOutput.ReadToEnd();
+                        stderr = process.StandardError.ReadToEnd();
+
+                        if (exitCode == 0 &&
+                            File.Exists(stagedOutput) &&
+                            new FileInfo(stagedOutput).Length > 0)
+                        {
+                            success = true;
+                            break;
+                        }
+
+                        UnityEngine.Debug.LogWarning(
+                            $"Noesis denemesi başarısız: {modelName}\n" +
+                            $"Options={options}\n" +
+                            $"ExitCode={exitCode}\n" +
+                            $"STDOUT:\n{stdout}\n" +
+                            $"STDERR:\n{stderr}");
+                    }
                 }
 
                 if (!success)
@@ -979,7 +982,6 @@ public static class Metin2PyungmooObjectImporter
                     string detail =
                         $"FAILED: {modelName}\n" +
                         $"Source={sourceFile}\n" +
-                        $"LastInput={successfulInput ?? "<none>"}\n" +
                         $"ExitCode={exitCode}\n" +
                         $"STDOUT:\n{stdout}\n" +
                         $"STDERR:\n{stderr}";
@@ -1037,6 +1039,18 @@ public static class Metin2PyungmooObjectImporter
                 UnityEngine.Debug.LogWarning(detail);
             }
         }
+
+        EditorUtility.ClearProgressBar();
+
+        UnityEngine.Debug.Log(
+            $"Pyungmoo model conversion: " +
+            $"new={stats.Converted}, " +
+            $"existing={stats.AlreadyExisting}, " +
+            $"missingSource={stats.MissingSource}, " +
+            $"failed={stats.Failed}");
+
+        return stats;
+    }
 
     private static Dictionary<string, GameObject>
         BuildModelIndex()
@@ -1260,55 +1274,52 @@ public static class Metin2PyungmooObjectImporter
     private static string FindSptFbxConverter(
         string repoRoot)
     {
+        string userProfile =
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.UserProfile);
+
         string oneDrive =
-            Environment.GetEnvironmentVariable("OneDrive");
+            Environment.GetEnvironmentVariable(
+                "OneDrive");
 
         var candidates =
             new List<string>
             {
                 Path.Combine(repoRoot, "Spt2Fbx.exe"),
                 Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt2Fbx.exe"),
+                Path.Combine(repoRoot, "SPT-to-FBX-Converter", "Spt-to-FBX.exe"),
                 Path.Combine(repoRoot, "shared_3d_exporting", "Spt2Fbx.exe"),
                 Path.Combine(
                     Directory.GetParent(repoRoot).FullName,
-                    "Spt2Fbx.exe")
+                    "Spt2Fbx.exe"),
+                Path.Combine(
+                    Directory.GetParent(repoRoot).FullName,
+                    "SPT-to-FBX-Converter",
+                    "Spt2Fbx.exe"),
+                Path.Combine(userProfile, "Desktop", "Spt2Fbx.exe"),
+                Path.Combine(userProfile, "Downloads", "Spt2Fbx.exe")
             };
 
         if (!string.IsNullOrEmpty(oneDrive))
         {
             candidates.Add(
-                Path.Combine(oneDrive, "Desktop", "Spt2Fbx.exe"));
+                Path.Combine(
+                    oneDrive,
+                    "Desktop",
+                    "Spt2Fbx.exe"));
 
             candidates.Add(
-                Path.Combine(oneDrive, "Masaüstü", "Spt2Fbx.exe"));
+                Path.Combine(
+                    oneDrive,
+                    "Desktop",
+                    "SPT-to-FBX-Converter",
+                    "Spt2Fbx.exe"));
         }
 
-        foreach (string candidate in candidates
-                     .Where(File.Exists)
-                     .Distinct(StringComparer.OrdinalIgnoreCase))
-        {
-            return candidate;
-        }
-
-        string parent =
-            Directory.GetParent(repoRoot)?.FullName;
-
-        if (!string.IsNullOrEmpty(parent))
-        {
-            try
-            {
-                return Directory.EnumerateFiles(
-                        parent,
-                        "Spt2Fbx.exe",
-                        SearchOption.AllDirectories)
-                    .FirstOrDefault();
-            }
-            catch
-            {
-            }
-        }
-
-        return null;
+        return candidates
+            .Where(File.Exists)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .FirstOrDefault();
     }
 
     private static bool TryRunSptFbxConverter(
@@ -1323,11 +1334,8 @@ public static class Metin2PyungmooObjectImporter
         stderr = string.Empty;
         exitCode = -1;
 
-        string sourceOutput =
-            Path.ChangeExtension(inputSpt, ".fbx");
-
-        bool hadExistingSourceOutput =
-            File.Exists(sourceOutput);
+        string arguments =
+            $"\"{inputSpt}\"";
 
         try
         {
@@ -1337,7 +1345,7 @@ public static class Metin2PyungmooObjectImporter
                     new ProcessStartInfo
                     {
                         FileName = converterPath,
-                        Arguments = $"\"{inputSpt}\"",
+                        Arguments = arguments,
                         WorkingDirectory =
                             Path.GetDirectoryName(converterPath),
                         UseShellExecute = false,
@@ -1361,22 +1369,8 @@ public static class Metin2PyungmooObjectImporter
                 stdout = process.StandardOutput.ReadToEnd();
                 stderr = process.StandardError.ReadToEnd();
 
-                if (exitCode != 0 ||
-                    !File.Exists(sourceOutput) ||
-                    new FileInfo(sourceOutput).Length == 0)
-                {
-                    return false;
-                }
-
-                File.Copy(sourceOutput, outputFbx, true);
-
-                if (!hadExistingSourceOutput)
-                {
-                    try { File.Delete(sourceOutput); }
-                    catch { }
-                }
-
-                return File.Exists(outputFbx) &&
+                return exitCode == 0 &&
+                       File.Exists(outputFbx) &&
                        new FileInfo(outputFbx).Length > 0;
             }
         }
